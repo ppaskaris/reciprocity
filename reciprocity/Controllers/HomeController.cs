@@ -31,26 +31,25 @@ namespace reciprocity.Controllers
             return View();
         }
 
-        [HttpGet, Route("create-new-book")]
-        public IActionResult CreateNewBook()
+        [HttpGet, Route("create-book")]
+        public IActionResult CreateBook()
         {
-            return View(new CreateNewBookModel());
+            return View(new CreateBookModel
+            {
+                Title = "My Recipes"
+            });
         }
 
-        [HttpPost, Route("create-new-book")]
-        public async Task<IActionResult> CreateNewBookAsync(CreateNewBookModel model)
+        [HttpPost, Route("create-book")]
+        public async Task<IActionResult> CreateBook(CreateBookModel model)
         {
             if (!ModelState.IsValid)
             {
                 return View(model);
             }
 
-            var book = await _bookService.CreateNewBookAsync(model.Title);
-            return RedirectToAction("Index", "Book", new
-            {
-                id = book.Id,
-                token = book.Token
-            });
+            var key = await _bookService.CreateBookAsync(model.Title);
+            return RedirectToAction("Index", "Book", key);
         }
 
         [HttpGet, Route("error/{statusCode?}")]

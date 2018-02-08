@@ -8,7 +8,7 @@ namespace reciprocity.Models.Book
 {
     public class BookModel
     {
-        public Guid Id { get; set; }
+        public Guid BookId { get; set; }
         public BearerToken Token { get; set; }
         public string Title { get; set; }
     }

@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace reciprocity.Models.Book
 {
-    public class BookKeyModel
+    public class AddRecipeModel
     {
-        [Required]
-        public Guid? BookId { get; set; }
-        [Required]
-        public string Token { get; set; }
+        [Required, StringLength(100)]
+        public string Title { get; set; }
+        [Required, Range(1, 100)]
+        public int Servings { get; set; }
     }
 }

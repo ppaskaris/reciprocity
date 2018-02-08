@@ -8,14 +8,16 @@ using System.Threading.Tasks;
 
 namespace reciprocity.Controllers
 {
-    [Route("{token}/book/{id}")]
+    [Route("{Token}/books/{BookId}")]
     public class BookController : Controller
     {
         private readonly IBookService _bookService;
+        private readonly IRecipeService _recipeService;
 
-        public BookController(IBookService bookService)
+        public BookController(IBookService bookService, IRecipeService recipeService)
         {
             _bookService = bookService;
+            _recipeService = recipeService;
         }
 
         [HttpGet]
@@ -73,7 +75,7 @@ namespace reciprocity.Controllers
 
             if (book.Title != model.Title)
             {
-                await _bookService.RenameBookAsync(book.Id, model.Title);
+                await _bookService.RenameBookAsync(book.BookId, model.Title);
             }
 
             return RedirectToAction("Index");
@@ -115,14 +117,58 @@ namespace reciprocity.Controllers
                 return NotFound();
             }
 
-            await _bookService.DeleteBookAsync(book.Id);
+            await _bookService.DeleteBookAsync(book.BookId);
 
             return RedirectToAction("Index", "Home");
         }
 
+        [HttpGet]
+        [Route("add-recipe")]
+        public async Task<IActionResult> AddRecipe(BookKeyModel key)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
+            var book = await GetBookAsync(key);
+            if (book == null)
+            {
+                return NotFound();
+            }
+
+            return View(new AddRecipeModel
+            {
+                Servings = 4
+            });
+        }
+
+        [HttpPost]
+        [Route("add-recipe")]
+        public async Task<IActionResult> AddRecipe(BookKeyModel bookKey, AddRecipeModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var book = await GetBookAsync(bookKey);
+            if (book == null)
+            {
+                return NotFound();
+            }
+
+            var recipeKey = await _recipeService.CreateRecipeAsync(
+                book.BookId,
+                model.Title,
+                model.Servings);
+            recipeKey.Token = bookKey.Token;
+            return RedirectToAction("Index", "Recipe", recipeKey);
+        }
+
         private async Task<BookModel> GetBookAsync(BookKeyModel key)
         {
-            var book = await _bookService.GetBookAsync(key.Id.Value);
+            var book = await _bookService.GetBookAsync(key.BookId.Value);
             if (book == null)
             {
                 return null;

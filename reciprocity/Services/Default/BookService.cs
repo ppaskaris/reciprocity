@@ -4,6 +4,7 @@ using reciprocity.Models.Book;
 using reciprocity.SecurityTheatre;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -18,35 +19,39 @@ namespace reciprocity.Services.Default
             _connectionFactory = connectionFactory;
         }
 
-        async Task<BookModel> IBookService.CreateNewBookAsync(string name)
+        async Task<BookKeyModel> IBookService.CreateBookAsync(string name)
         {
             var book = new BookModel
             {
-                Id = Guid.NewGuid(),
+                BookId = Guid.NewGuid(),
                 Token = BearerToken.CreateRandom(),
                 Title = name
             };
-            using (var connection = _connectionFactory.CreateConnection())
+            using (var connection = GetConnection())
             {
                 await connection.ExecuteAsync(
                     @"
-                    INSERT INTO book (id, token, title)
-                    VALUES (@id, @token, @title);
+                    INSERT INTO Book (BookId, Token, Title)
+                    VALUES (@bookId, @token, @title);
                     ",
                     book);
             }
-            return book;
+            return new BookKeyModel
+            {
+                BookId = book.BookId,
+                Token = book.Token.ToString()
+            };
         }
 
         async Task<BookModel> IBookService.GetBookAsync(Guid id)
         {
-            using (var connection = _connectionFactory.CreateConnection())
+            using (var connection = GetConnection())
             {
                 var book = await connection.QuerySingleOrDefaultAsync<BookModel>(
                     @"
-                    SELECT id, token, title
-                    FROM book
-                    WHERE id = @id;
+                    SELECT BookId, Token, Title
+                    FROM Book
+                    WHERE BookId = @id;
                     ",
                     new { id });
                 return book;
@@ -55,13 +60,13 @@ namespace reciprocity.Services.Default
 
         async Task IBookService.RenameBookAsync(Guid id, string title)
         {
-            using (var connection = _connectionFactory.CreateConnection())
+            using (var connection = GetConnection())
             {
                 await connection.ExecuteAsync(
                     @"
-                    UPDATE book
-                    SET title = @title
-                    WHERE id = @id;
+                    UPDATE Book
+                    SET Title = @title
+                    WHERE BookId = @id;
                     ",
                     new { id, title });
             }
@@ -69,15 +74,20 @@ namespace reciprocity.Services.Default
 
         async Task IBookService.DeleteBookAsync(Guid id)
         {
-            using (var connection = _connectionFactory.CreateConnection())
+            using (var connection = GetConnection())
             {
                 await connection.ExecuteAsync(
                     @"
-                    DELETE FROM book
-                    WHERE id = @id;
+                    DELETE FROM Book
+                    WHERE BookId = @id;
                     ",
                     new { id });
             }
+        }
+
+        private SqlConnection GetConnection()
+        {
+            return _connectionFactory.CreateConnection();
         }
     }
 }

@@ -8,7 +8,7 @@ namespace reciprocity.Services
 {
     public interface IBookService
     {
-        Task<BookModel> CreateNewBookAsync(string name);
+        Task<BookKeyModel> CreateBookAsync(string name);
         Task<BookModel> GetBookAsync(Guid id);
         Task RenameBookAsync(Guid id, string title);
         Task DeleteBookAsync(Guid id);

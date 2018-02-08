@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace reciprocity.Models.Home
 {
-    public class CreateNewBookModel
+    public class CreateBookModel
     {
         [Required, StringLength(100)]
-        public string Title { get; set; } = "My Recipes";
+        public string Title { get; set; }
     }
 }

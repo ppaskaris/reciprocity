@@ -1,13 +1,13 @@
-﻿@model reciprocity.Models.Home.CreateNewBookModel
+﻿@model reciprocity.Models.Home.CreateBookModel
 
 @{
-    ViewData["Title"] = "Create New Recipe Book";
+    ViewData["Title"] = "Create Recipe Book";
 }
 
 <h1>@ViewData["Title"]</h1>
 <p><strong>Recipe books</strong> are anonymous collections of recipes.</p>
 
-<form asp-action="CreateNewBook">
+<form asp-action="CreateBook">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <div class="form-group">
         <label asp-for="Title" class="control-label"></label>

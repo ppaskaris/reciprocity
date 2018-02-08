@@ -3,11 +3,19 @@
     ViewData["Title"] = Model.Title;
 }
 
-<h2>@Model.Title</h2>
+<h1>@Model.Title</h1>
 <p>
     This is a <strong>secret recipe book</strong> that is only visible to those
     with a copy of <a asp-action="Index">this link</a>. Consider bookmarking it
     as it cannot be recovered if you lose it.
+</p>
+
+<h2>Recipes</h2>
+<p>
+    <em>No recipes added.</em>
+</p>
+<p>
+    <a class="btn btn-default" asp-action="AddRecipe">Add Recipe</a>
 </p>
 
 <h2>Settings</h2>
