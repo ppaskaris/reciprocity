@@ -1,0 +1,19 @@
+﻿@model reciprocity.Models.Book.DeleteBookViewModel
+
+@{
+    ViewData["Title"] = "Delete Recipe Book";
+}
+
+<h2>@ViewData["Title"]</h2>
+<p>
+    Your recipe book named "@Model.Title" will be deleted immediately and will
+    not be recoverable.
+</p>
+<p>
+    Are you sure you want to delete your recipe book?
+</p>
+<form asp-action="Delete">
+    <input type="hidden" name="Confirm" value="true" />
+    <input type="submit" value="Delete Recipe Book" class="btn btn-danger" />
+    <a asp-action="Index" class="btn btn-default">Cancel</a>
+</form>

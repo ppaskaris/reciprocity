@@ -1,0 +1,20 @@
+﻿@model reciprocity.Models.Book.EditBookModel
+
+@{
+    ViewData["Title"] = "Edit Recipe Book";
+}
+
+<h2>@ViewData["Title"]</h2>
+<form asp-action="Edit">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="form-group">
+        <label asp-for="Title" class="control-label"></label>
+        <input asp-for="Title" class="form-control" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <input type="submit" value="Save Recipe Book" class="btn btn-primary" />
+        <a asp-action="Index" class="btn btn-default">Cancel</a>
+    </div>
+</form>
+

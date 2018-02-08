@@ -1,0 +1,48 @@
+﻿@{
+    ViewData["Title"] = "About";
+}
+
+<h1>@ViewData["Title"]</h1>
+<p>
+    reciprocity <sub>(<a href="https://github.com/ppaskaris/reciprocity" rel="noopener noreferrer" referrerpolicy="no-referrer" target="_blank">source</a>, <a href="https://raw.githubusercontent.com/ppaskaris/reciprocity/master/LICENSE" rel="noopener noreferrer" referrerpolicy="no-referrer" target="_blank">license</a>)</sub>
+    is an anonymous recipe manager and nutrition calculator. It is <a href="https://www.gnu.org/philosophy/free-sw.html" rel="noopener noreferrer" referrerpolicy="no-referrer" target="_blank">free software</a>,
+    distributed under the <a href="https://www.gnu.org/copyleft/gpl.html" rel="noopener noreferrer" referrerpolicy="no-referrer" target="_blank">GNU General Public License</a>.
+</p>
+
+<h2>Usage</h2>
+<ol>
+    <li><a asp-controller="Home" asp-action="CreateNewBook">Create a new recipe book</a>.</li>
+    <li>Add a new recipe to your recipe book.</li>
+    <li>Add ingredients and their nutritional information to your recipe.</li>
+    <li>Add detailed cooking instructions to your recipe (optional).</li>
+    <li>View the calculated nutritional information per portion.</li>
+    <li>Share your recipe in read-only mode (optional).</li>
+</ol>
+
+<h2>Privacy</h2>
+<p>
+    reciprocity does not track or store any usage information other than:
+</p>
+<ul>
+    <li>When you last viewed your recipe book (with noise added).</li>
+    <li>Web server logs for 7 days.</li>
+</ul>
+<p>
+    reciprocity attempts to execute the following scripts on all pages:
+</p>
+<ul>
+    <li>jQuery 2.2.0 <sub>(<a href="https://github.com/jquery/jquery/tree/2.2.0" rel="noopener noreferrer" referrerpolicy="no-referrer" target="_blank">source</a>, <a href="https://raw.githubusercontent.com/jquery/jquery/2.2.0/LICENSE.txt" rel="noopener noreferrer" referrerpolicy="no-referrer" target="_blank">license</a>)</sub></li>
+    <li>jQuery Validate 1.14.0 <sub>(<a href="https://github.com/jquery-validation/jquery-validation/tree/1.14.0" rel="noopener noreferrer" referrerpolicy="no-referrer" target="_blank">source</a>, <a href="https://raw.githubusercontent.com/jquery-validation/jquery-validation/1.14.0/LICENSE.md" rel="noopener noreferrer" referrerpolicy="no-referrer" target="_blank">license</a>)</sub></li>
+    <li>jQuery Validate Unobtrusive 3.2.6 <sub>(<a href="https://github.com/aspnet/jquery-validation-unobtrusive/tree/v3.2.6" rel="noopener noreferrer" referrerpolicy="no-referrer" target="_blank">source</a>, <a href="https://raw.githubusercontent.com/aspnet/jquery-validation-unobtrusive/v3.2.6/LICENSE.txt" rel="noopener noreferrer" referrerpolicy="no-referrer" target="_blank">license</a>)</sub></li>
+</ul>
+<p>
+    These programs are retrieved from the <a href="https://docs.microsoft.com/en-us/aspnet/ajax/cdn/overview" rel="noopener noreferrer" referrerpolicy="no-referrer" target="_blank">Microsoft Ajax Content Delivery Network</a>
+    using Subresource Integrity (SRI). All third-party links, images,
+    stylesheets and scripts are configured with a Referrer Policy of
+    "no-referrer".
+
+<h2>Contact</h2>
+<dl class="dl-horizontal">
+    <dt>General questions</dt>
+    <dd><a href="mailto:reciprocity@veggiebur.gr">reciprocity@veggiebur.gr</a></dd>
+</dl>

@@ -1,0 +1,17 @@
+﻿@model reciprocity.Models.Book.BookModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<h2>@Model.Title</h2>
+<p>
+    This is a <strong>secret recipe book</strong> that is only visible to those
+    with a copy of <a asp-action="Index">this link</a>. Consider bookmarking it
+    as it cannot be recovered if you lose it.
+</p>
+
+<h2>Settings</h2>
+<p>
+    <a class="btn btn-default" asp-action="Edit">Edit Recipe Book</a>
+    <a class="btn btn-danger" asp-action="Delete">Delete Recipe Book</a>
+</p>

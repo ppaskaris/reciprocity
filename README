@@ -1,0 +1,15 @@
+reciprocity
+===========
+
+reciprocity is an anonymous recipe manager and nutrition calculator. It is free
+software [1], distributed under the GNU General Public License [2].
+
+I wrote this program to help me tabulate the damage caused by my adventures in
+weight loss and cooking. I run an instance [3] of it on the Azure free tier for
+my personal use. You are free to use this instance, but be warned that Azure
+suspends the application when it is not in use, which frequently results in high
+latency.
+
+[1]: https://www.gnu.org/philosophy/free-sw.html
+[2]: https://www.gnu.org/copyleft/gpl.html
+[3]: https://reciprocity-gr.azurewebsites.net/
