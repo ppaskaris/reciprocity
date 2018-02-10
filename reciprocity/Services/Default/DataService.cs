@@ -97,7 +97,7 @@ namespace reciprocity.Services.Default
 
         async Task<RecipeKeyModel> IDataService.CreateRecipeAsync(Guid bookId, AddRecipeModel fragment)
         {
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
             var recipe = new RecipeModel
             {
                 BookId = bookId,

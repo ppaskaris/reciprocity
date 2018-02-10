@@ -47,6 +47,7 @@
     <environment include="Development">
         <script src="~/lib/jquery/dist/jquery.js"></script>
         <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
+        <script src="~/lib/masonry/masonry.pkgd.js"></script>
         <script src="~/js/site.js" asp-append-version="true"></script>
     </environment>
     <environment exclude="Development">
@@ -62,6 +63,13 @@
                 asp-fallback-test="window.jQuery && window.jQuery.fn && window.jQuery.fn.modal"
                 crossorigin="anonymous"
                 integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+                referrerpolicy="no-referrer">
+        </script>
+        <script src="https://unpkg.com/masonry-layout@4.2.1/dist/masonry.pkgd.min.js"
+                asp-fallback-src="~/lib/masonry/masonry.pkgd.min.js"
+                asp-fallback-test="window.Masonry"
+                crossorigin="anonymous"
+                integrity="sha384-yw7soowW0iv52ojeRvv6i2kl6A4AI2yR4tXvV1Vo44lZVLAVc8i7Hd536sUq76JB"
                 referrerpolicy="no-referrer">
         </script>
         <script src="~/js/site.min.js" asp-append-version="true"></script>
