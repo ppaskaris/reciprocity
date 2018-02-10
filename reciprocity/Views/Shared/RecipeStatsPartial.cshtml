@@ -3,8 +3,8 @@
 <ul class="list-inline">
     <li>
         <span class="glyphicon glyphicon-user"
-              title="Serves" aria-hidden="true"></span>
-        <span class="text-hide">Serves:</span>
+              title="Servings" aria-hidden="true"></span>
+        <span class="text-hide">Servings:</span>
         @Model.Servings
     </li>
     <li>
@@ -23,12 +23,18 @@
         <span class="glyphicon glyphicon-calendar"
               title="Added" aria-hidden="true"></span>
         <span class="text-hide">Added:</span>
-        @Model.AddedAt.Humanize()
+        <time datetime="@Model.AddedAt.ToString("o")"
+              title="@Model.AddedAt.ToString("F")">
+            @Model.AddedAt.Humanize()
+        </time>
     </li>
     <li>
         <span class="glyphicon glyphicon-pencil"
               title="Added" aria-hidden="true"></span>
         <span class="text-hide">Last modified:</span>
-        @Model.LastModifiedAt.Humanize()
+        <time datetime="@Model.LastModifiedAt.ToString("o")"
+              title="@Model.LastModifiedAt.ToString("F")">
+            @Model.LastModifiedAt.Humanize()
+        </time>
     </li>
 </ul>

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace reciprocity.Views.Shared
+namespace reciprocity
 {
     public static class Extensions
     {

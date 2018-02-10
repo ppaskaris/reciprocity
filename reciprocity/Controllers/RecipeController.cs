@@ -79,9 +79,47 @@ namespace reciprocity.Controllers
             }
 
             await _dataService
-                .UpdateRecipe(recipe.BookId, recipe.RecipeId, model);
+                .UpdateRecipeAsync(recipe.BookId, recipe.RecipeId, model);
 
             return RedirectToAction("Index");
+        }
+
+        [HttpGet]
+        [Route("delete")]
+        async public Task<IActionResult> Delete(RecipeKeyModel key)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
+            var (book, recipe) = await GetRecipeAsync(key);
+            if (recipe == null)
+            {
+                return NotFound();
+            }
+
+            return View(recipe);
+        }
+
+        [HttpPost]
+        [Route("delete")]
+        async public Task<IActionResult> Delete(RecipeKeyModel key, DeleteRecipeModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var (book, recipe) = await GetRecipeAsync(key);
+            if (recipe == null)
+            {
+                return NotFound();
+            }
+
+            await _dataService.DeleteRecipeAsync(recipe.BookId, recipe.RecipeId);
+
+            return RedirectToAction("Index", "Book");
         }
 
         #region Helpers

@@ -167,7 +167,7 @@ namespace reciprocity.Services.Default
             }
         }
 
-        async Task IDataService.UpdateRecipe(Guid bookId, Guid recipeId, EditRecipeModel fragment)
+        async Task IDataService.UpdateRecipeAsync(Guid bookId, Guid recipeId, EditRecipeModel fragment)
         {
             using (var connection = GetConnection())
             {
@@ -190,6 +190,19 @@ namespace reciprocity.Services.Default
                         servings = fragment.Servings,
                         now = DateTime.UtcNow,
                     });
+            }
+        }
+
+        async Task IDataService.DeleteRecipeAsync(Guid bookId, Guid recipeId)
+        {
+            using (var connection = GetConnection())
+            {
+                await connection.ExecuteAsync(
+                    @"
+                    DELETE FROM BookRecipe
+                    WHERE BookId = @bookId AND RecipeId = @recipeId;
+                    ",
+                    new { bookId, recipeId });
             }
         }
     }

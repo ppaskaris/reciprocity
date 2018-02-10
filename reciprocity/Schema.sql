@@ -26,4 +26,5 @@ CREATE TABLE BookRecipe (
 	CONSTRAINT FK_BookRecipe_Book
 		FOREIGN KEY (BookId)
 		REFERENCES Book (BookId)
+		ON DELETE CASCADE
 );

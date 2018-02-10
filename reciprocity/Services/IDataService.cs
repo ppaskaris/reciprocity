@@ -16,6 +16,7 @@ namespace reciprocity.Services
         Task<RecipeKeyModel> CreateRecipeAsync(Guid bookId, AddRecipeModel recipe);
         Task<RecipeModel> GetRecipeAsync(Guid bookId, Guid recipeId);
         Task<BookViewModel> GetBookViewAsync(Guid bookId);
-        Task UpdateRecipe(Guid bookId, Guid recipeId, EditRecipeModel model);
+        Task UpdateRecipeAsync(Guid bookId, Guid recipeId, EditRecipeModel model);
+        Task DeleteRecipeAsync(Guid bookId, Guid recipeId);
     }
 }

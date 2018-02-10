@@ -1,0 +1,19 @@
+﻿@model reciprocity.Models.Recipe.RecipeModel
+
+@{
+    ViewData["Title"] = "Delete Recipe";
+}
+
+<h1>@ViewData["Title"]</h1>
+<p>
+    Your recipe named "@Model.Name" will be deleted immediately and will not be
+    recoverable.
+</p>
+<p>
+    Are you sure you want to delete this recipe?
+</p>
+<form asp-action="Delete">
+    <input type="hidden" name="Confirm" value="true" />
+    <input type="submit" value="Delete Recipe" class="btn btn-danger" />
+    <a asp-action="Index" class="btn btn-default">Cancel</a>
+</form>

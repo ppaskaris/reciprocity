@@ -15,8 +15,13 @@
     padding-right: 15px;
 }
 
-/* Book/Index */
+/* Shared */
 
+.recipe-description {
+    white-space: pre-line;
+}
+
+/* Book/Index */
 .recipe-list {
     margin: -2px 0;
 }

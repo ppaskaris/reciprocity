@@ -95,10 +95,7 @@ namespace reciprocity.Controllers
                 return NotFound();
             }
 
-            return View(new DeleteBookViewModel
-            {
-                Name = book.Name
-            });
+            return View(book);
         }
 
         [HttpPost]

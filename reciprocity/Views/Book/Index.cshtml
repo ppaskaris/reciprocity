@@ -26,16 +26,16 @@
                asp-route-recipeid="@recipe.RecipeId">
                 <h3 class="list-group-item-heading">@recipe.Name</h3>
                 @Html.Partial("RecipeStatsPartial", recipe)
-                <p class="list-group-item-text">
-                    @if (recipe.Description != null)
-                    {
-                        @recipe.Description
-                    }
-                    else
-                    {
+                @if (recipe.Description != null)
+                {
+                    <p class="list-group-item-text recipe-description">@recipe.Description</p>
+                }
+                else
+                {
+                    <p class="list-group-item-text">
                         <em>No description added.</em>
-                    }
-                </p>
+                    </p>
+                }
             </a>
         }
     </div>
@@ -47,22 +47,19 @@ else
         <em>No recipes added.</em>
     </p>
 }
-<p>
-    <a class="btn btn-default" asp-action="AddRecipe">Add Recipe</a>
-</p>
+<a class="btn btn-default" asp-action="AddRecipe">Add Recipe</a>
 
 <h2>Actions</h2>
-<p>
-    <a class="btn btn-default" asp-action="Edit">Edit Recipe Book</a>
-    <a class="btn btn-default" asp-action="Delete">Delete Recipe Book</a>
-</p>
+<a class="btn btn-default" asp-action="Edit">Edit Recipe Book</a>
+<a class="btn btn-default" asp-action="Delete">Delete Recipe Book</a>
 
 @section Scripts {
     <script type="text/javascript">
         $(document).ready(function () {
             $('.recipe-list').masonry({
                 itemSelector: '.recipe-list-item',
-                percentPosition: true
+                percentPosition: true,
+                transitionDuration: 0
             });
         });
     </script>
