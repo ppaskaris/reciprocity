@@ -11,13 +11,11 @@ namespace reciprocity.Controllers
     [Route("{Token}/books/{BookId}")]
     public class BookController : Controller
     {
-        private readonly IBookService _bookService;
-        private readonly IRecipeService _recipeService;
+        private readonly IDataService _dataService;
 
-        public BookController(IBookService bookService, IRecipeService recipeService)
+        public BookController(IDataService dataService)
         {
-            _bookService = bookService;
-            _recipeService = recipeService;
+            _dataService = dataService;
         }
 
         [HttpGet]
@@ -34,7 +32,7 @@ namespace reciprocity.Controllers
                 return NotFound();
             }
 
-            var viewModel = await _bookService.GetBookViewAsync(book.BookId);
+            var viewModel = await _dataService.GetBookViewAsync(book.BookId);
             return View(viewModel);
         }
 
@@ -55,7 +53,7 @@ namespace reciprocity.Controllers
 
             return View(new EditBookModel
             {
-                Title = book.Title
+                Name = book.Name
             });
         }
 
@@ -74,9 +72,9 @@ namespace reciprocity.Controllers
                 return NotFound();
             }
 
-            if (book.Title != model.Title)
+            if (book.Name != model.Name)
             {
-                await _bookService.RenameBookAsync(book.BookId, model.Title);
+                await _dataService.RenameBookAsync(book.BookId, model.Name);
             }
 
             return RedirectToAction("Index");
@@ -99,7 +97,7 @@ namespace reciprocity.Controllers
 
             return View(new DeleteBookViewModel
             {
-                Title = book.Title
+                Name = book.Name
             });
         }
 
@@ -118,7 +116,7 @@ namespace reciprocity.Controllers
                 return NotFound();
             }
 
-            await _bookService.DeleteBookAsync(book.BookId);
+            await _dataService.DeleteBookAsync(book.BookId);
 
             return RedirectToAction("Index", "Home");
         }
@@ -159,17 +157,14 @@ namespace reciprocity.Controllers
                 return NotFound();
             }
 
-            var recipeKey = await _recipeService.CreateRecipeAsync(
-                book.BookId,
-                model.Title,
-                model.Servings);
+            var recipeKey = await _dataService.CreateRecipeAsync(book.BookId, model);
             recipeKey.Token = bookKey.Token;
             return RedirectToAction("Index", "Recipe", recipeKey);
         }
 
         private async Task<BookModel> GetBookAsync(BookKeyModel key)
         {
-            var book = await _bookService.GetBookAsync(key.BookId.Value);
+            var book = await _dataService.GetBookAsync(key.BookId.Value);
             if (book == null)
             {
                 return null;

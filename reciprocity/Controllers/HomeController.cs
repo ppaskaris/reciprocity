@@ -12,11 +12,11 @@ namespace reciprocity.Controllers
     [Route("")]
     public class HomeController : Controller
     {
-        private readonly IBookService _bookService;
+        private readonly IDataService _dataService;
 
-        public HomeController(IBookService bookService)
+        public HomeController(IDataService dataService)
         {
-            _bookService = bookService;
+            _dataService = dataService;
         }
 
         [HttpGet]
@@ -36,7 +36,7 @@ namespace reciprocity.Controllers
         {
             return View(new CreateBookModel
             {
-                Title = "My Recipes"
+                Name = "My Recipes"
             });
         }
 
@@ -48,7 +48,7 @@ namespace reciprocity.Controllers
                 return View(model);
             }
 
-            var key = await _bookService.CreateBookAsync(model.Title);
+            var key = await _dataService.CreateBookAsync(model.Name);
             return RedirectToAction("Index", "Book", key);
         }
 

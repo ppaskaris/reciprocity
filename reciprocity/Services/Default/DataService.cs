@@ -11,11 +11,11 @@ using System.Threading.Tasks;
 
 namespace reciprocity.Services.Default
 {
-    public class BookService : IBookService
+    public class DataService : IDataService
     {
         private readonly IConnectionFactory _connectionFactory;
 
-        public BookService(IConnectionFactory connectionFactory)
+        public DataService(IConnectionFactory connectionFactory)
         {
             _connectionFactory = connectionFactory;
         }
@@ -29,20 +29,20 @@ namespace reciprocity.Services.Default
 
         #endregion
 
-        async Task<BookKeyModel> IBookService.CreateBookAsync(string name)
+        async Task<BookKeyModel> IDataService.CreateBookAsync(string name)
         {
             var book = new BookModel
             {
                 BookId = Guid.NewGuid(),
                 Token = BearerToken.CreateRandom(),
-                Title = name
+                Name = name
             };
             using (var connection = GetConnection())
             {
                 await connection.ExecuteAsync(
                     @"
-                    INSERT INTO Book (BookId, Token, Title)
-                    VALUES (@bookId, @token, @title);
+                    INSERT INTO Book (BookId, Token, [Name])
+                    VALUES (@bookId, @token, @name);
                     ",
                     book);
             }
@@ -53,13 +53,13 @@ namespace reciprocity.Services.Default
             };
         }
 
-        async Task<BookModel> IBookService.GetBookAsync(Guid bookId)
+        async Task<BookModel> IDataService.GetBookAsync(Guid bookId)
         {
             using (var connection = GetConnection())
             {
                 var book = await connection.QuerySingleOrDefaultAsync<BookModel>(
                     @"
-                    SELECT BookId, Token, Title
+                    SELECT BookId, Token, [Name]
                     FROM Book
                     WHERE BookId = @bookId;
                     ",
@@ -68,21 +68,21 @@ namespace reciprocity.Services.Default
             }
         }
 
-        async Task IBookService.RenameBookAsync(Guid bookId, string title)
+        async Task IDataService.RenameBookAsync(Guid bookId, string name)
         {
             using (var connection = GetConnection())
             {
                 await connection.ExecuteAsync(
                     @"
                     UPDATE Book
-                    SET Title = @title
+                    SET [Name] = @name
                     WHERE BookId = @bookId;
                     ",
-                    new { bookId, title });
+                    new { bookId, name });
             }
         }
 
-        async Task IBookService.DeleteBookAsync(Guid bookId)
+        async Task IDataService.DeleteBookAsync(Guid bookId)
         {
             using (var connection = GetConnection())
             {
@@ -95,15 +95,61 @@ namespace reciprocity.Services.Default
             }
         }
 
-        async Task<BookViewModel> IBookService.GetBookViewAsync(Guid bookId)
+        async Task<RecipeKeyModel> IDataService.CreateRecipeAsync(Guid bookId, AddRecipeModel fragment)
+        {
+            var now = DateTime.Now;
+            var recipe = new RecipeModel
+            {
+                BookId = bookId,
+                RecipeId = Guid.NewGuid(),
+                Name = fragment.Name,
+                Description = fragment.Description,
+                Servings = fragment.Servings,
+                AddedAt = now,
+                LastModifiedAt = now
+            };
+            using (var connection = GetConnection())
+            {
+                await connection.ExecuteAsync(
+                    @"
+                    INSERT INTO BookRecipe (BookId, RecipeId, [Name], [Description], Servings, AddedAt, LastModifiedat)
+                    VALUES (@bookId, @recipeId, @name, @description, @servings, @addedAt, @lastModifiedAt);
+                    ",
+                    recipe
+                );
+            }
+            return new RecipeKeyModel
+            {
+                BookId = recipe.BookId,
+                RecipeId = recipe.RecipeId
+            };
+        }
+
+        async Task<RecipeModel> IDataService.GetRecipeAsync(Guid bookId, Guid recipeId)
+        {
+            using (var connection = GetConnection())
+            {
+                var recipe = await connection.QuerySingleOrDefaultAsync<RecipeModel>(
+                    @"
+                    SELECT BookId, RecipeId, [Name], [Description], Servings, AddedAt, LastModifiedAt
+                    FROM BookRecipe
+                    WHERE BookId = @bookId AND RecipeId = @recipeId;
+                    ",
+                    new { bookId, recipeId }
+                );
+                return recipe;
+            }
+        }
+
+        async Task<BookViewModel> IDataService.GetBookViewAsync(Guid bookId)
         {
             const string queryText =
                 @"
-                SELECT BookId, Title
+                SELECT BookId, [Name]
                 FROM Book
                 WHERE BookId = @bookId;
 
-                SELECT BookId, RecipeId, Title, Servings, AddedAt, LastModifiedAt
+                SELECT BookId, RecipeId, [Name], [Description], Servings, AddedAt, LastModifiedAt
                 FROM BookRecipe
                 WHERE BookId = @bookId;
                 ";

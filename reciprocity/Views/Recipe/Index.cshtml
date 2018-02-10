@@ -1,19 +1,26 @@
 ﻿@model reciprocity.Models.Recipe.RecipeViewModel
 
 @{
-    ViewData["Title"] = Model.Recipe.Title;
+    ViewData["Title"] = Model.Recipe.Name;
 }
 
 <ol class="breadcrumb">
     <li><a asp-action="Index" asp-controller="Home">Home</a></li>
-    <li><a asp-action="Index" asp-controller="Book">@Model.Book.Title</a></li>
-    <li class="active">@Model.Recipe.Title</li>
+    <li><a asp-action="Index" asp-controller="Book">@Model.Book.Name</a></li>
+    <li class="active">@Model.Recipe.Name</li>
 </ol>
 
 <h1>@ViewData["Title"]</h1>
 @Html.Partial("RecipeStatsPartial", Model.Recipe)
 <p>
-    <em>No description added.</em>
+    @if (Model.Recipe.Description != null)
+    {
+        @Model.Recipe.Description
+    }
+    else
+    {
+        <em>No description added.</em>
+    }
 </p>
 
 <a class="btn btn-default" asp-action="Edit">Edit Recipe</a>

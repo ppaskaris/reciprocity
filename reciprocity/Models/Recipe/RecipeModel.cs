@@ -10,11 +10,12 @@ namespace reciprocity.Models.Recipe
         public Guid BookId { get; set; }
         public Guid RecipeId { get; set; }
 
-        public string Title { get; set; }
+        public string Name { get; set; }
         public int Servings { get; set; }
         public TimeSpan ReadyIn { get; set; }
-
         public DateTime AddedAt { get; set; }
         public DateTime LastModifiedAt { get; set; }
+
+        public string Description { get; set; }
     }
 }

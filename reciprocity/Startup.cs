@@ -38,8 +38,7 @@ namespace reciprocity
 
             services.AddSingleton<IConnectionFactory>(new ConnectionStringConnectionFactory(Configuration.GetConnectionString("Main")));
 
-            services.AddSingleton<IBookService, BookService>();
-            services.AddSingleton<IRecipeService, RecipeService>();
+            services.AddSingleton<IDataService, DataService>();
         }
 
         // This method gets called by the runtime. Use this method to configure

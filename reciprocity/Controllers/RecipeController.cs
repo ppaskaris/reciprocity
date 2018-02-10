@@ -12,13 +12,11 @@ namespace reciprocity.Controllers
     [Route("{Token}/books/{BookId}/recipes/{RecipeId}")]
     public class RecipeController : Controller
     {
-        private readonly IBookService _bookService;
-        private readonly IRecipeService _recipeService;
+        private readonly IDataService _dataService;
 
-        public RecipeController(IBookService bookService, IRecipeService recipeService)
+        public RecipeController(IDataService dataService)
         {
-            _bookService = bookService;
-            _recipeService = recipeService;
+            _dataService = dataService;
         }
 
         [HttpGet]
@@ -44,7 +42,7 @@ namespace reciprocity.Controllers
 
         private async Task<(BookModel, RecipeModel)> GetRecipeAsync(RecipeKeyModel key)
         {
-            var book = await _bookService.GetBookAsync(key.BookId.Value);
+            var book = await _dataService.GetBookAsync(key.BookId.Value);
             if (book == null)
             {
                 return default;
@@ -53,9 +51,8 @@ namespace reciprocity.Controllers
             {
                 return default;
             }
-            var recipe = await _recipeService.GetRecipeAsync(
-                key.BookId.Value,
-                key.RecipeId.Value);
+            var recipe = await _dataService
+                .GetRecipeAsync(key.BookId.Value, key.RecipeId.Value);
             return (book, recipe);
         }
     }

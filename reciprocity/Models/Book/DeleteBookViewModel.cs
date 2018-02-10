@@ -8,6 +8,6 @@ namespace reciprocity.Models.Book
 {
     public class DeleteBookViewModel
     {
-        public string Title { get; set; }
+        public string Name { get; set; }
     }
 }

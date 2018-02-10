@@ -9,6 +9,6 @@ namespace reciprocity.Models.Book
     public class EditBookModel
     {
         [Required, StringLength(100)]
-        public string Title { get; set; }
+        public string Name { get; set; }
     }
 }

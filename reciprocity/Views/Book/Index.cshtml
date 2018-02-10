@@ -1,11 +1,11 @@
 ﻿@model reciprocity.Models.Book.BookViewModel
 @{
-    ViewData["Title"] = Model.Book.Title;
+    ViewData["Title"] = Model.Book.Name;
 }
 
 <ol class="breadcrumb">
     <li><a asp-action="Index" asp-controller="Home">Home</a></li>
-    <li>@Model.Book.Title</li>
+    <li>@Model.Book.Name</li>
 </ol>
 
 <h1>@ViewData["Title"]</h1>
@@ -24,10 +24,17 @@
             <a class="list-group-item recipe-list-item" role="listitem"
                asp-action="Index" asp-controller="Recipe"
                asp-route-recipeid="@recipe.RecipeId">
-                <h3 class="list-group-item-heading">@recipe.Title</h3>
+                <h3 class="list-group-item-heading">@recipe.Name</h3>
                 @Html.Partial("RecipeStatsPartial", recipe)
                 <p class="list-group-item-text">
-                    <em>No description added.</em>
+                    @if (recipe.Description != null)
+                    {
+                        @recipe.Description
+                    }
+                    else
+                    {
+                        <em>No description added.</em>
+                    }
                 </p>
             </a>
         }
