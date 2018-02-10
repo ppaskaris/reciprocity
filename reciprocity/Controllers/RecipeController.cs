@@ -40,6 +40,52 @@ namespace reciprocity.Controllers
             });
         }
 
+        [HttpGet]
+        [Route("edit")]
+        async public Task<IActionResult> Edit(RecipeKeyModel key)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
+            var (book, recipe) = await GetRecipeAsync(key);
+            if (recipe == null)
+            {
+                return NotFound();
+            }
+
+            return View(new EditRecipeModel
+            {
+                Name = recipe.Name,
+                Description = recipe.Description,
+                Servings = recipe.Servings
+            });
+        }
+
+        [HttpPost]
+        [Route("edit")]
+        async public Task<IActionResult> Edit(RecipeKeyModel key, EditRecipeModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var (book, recipe) = await GetRecipeAsync(key);
+            if (recipe == null)
+            {
+                return NotFound();
+            }
+
+            await _dataService
+                .UpdateRecipe(recipe.BookId, recipe.RecipeId, model);
+
+            return RedirectToAction("Index");
+        }
+
+        #region Helpers
+
         private async Task<(BookModel, RecipeModel)> GetRecipeAsync(RecipeKeyModel key)
         {
             var book = await _dataService.GetBookAsync(key.BookId.Value);
@@ -55,5 +101,7 @@ namespace reciprocity.Controllers
                 .GetRecipeAsync(key.BookId.Value, key.RecipeId.Value);
             return (book, recipe);
         }
+
+        #endregion
     }
 }

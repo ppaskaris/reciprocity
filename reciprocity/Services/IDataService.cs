@@ -10,11 +10,12 @@ namespace reciprocity.Services
     public interface IDataService
     {
         Task<BookKeyModel> CreateBookAsync(string name);
-        Task<BookModel> GetBookAsync(Guid id);
-        Task RenameBookAsync(Guid id, string name);
-        Task DeleteBookAsync(Guid id);
+        Task<BookModel> GetBookAsync(Guid bookId);
+        Task RenameBookAsync(Guid bookId, string name);
+        Task DeleteBookAsync(Guid bookId);
         Task<RecipeKeyModel> CreateRecipeAsync(Guid bookId, AddRecipeModel recipe);
         Task<RecipeModel> GetRecipeAsync(Guid bookId, Guid recipeId);
         Task<BookViewModel> GetBookViewAsync(Guid bookId);
+        Task UpdateRecipe(Guid bookId, Guid recipeId, EditRecipeModel model);
     }
 }

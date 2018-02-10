@@ -162,6 +162,8 @@ namespace reciprocity.Controllers
             return RedirectToAction("Index", "Recipe", recipeKey);
         }
 
+        #region Helpers
+
         private async Task<BookModel> GetBookAsync(BookKeyModel key)
         {
             var book = await _dataService.GetBookAsync(key.BookId.Value);
@@ -175,5 +177,7 @@ namespace reciprocity.Controllers
             }
             return book;
         }
+
+        #endregion
     }
 }

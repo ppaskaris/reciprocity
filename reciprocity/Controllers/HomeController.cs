@@ -25,13 +25,15 @@ namespace reciprocity.Controllers
             return View();
         }
 
-        [HttpGet, Route("about")]
+        [HttpGet]
+        [Route("about")]
         public IActionResult About()
         {
             return View();
         }
 
-        [HttpGet, Route("create-book")]
+        [HttpGet]
+        [Route("create-book")]
         public IActionResult CreateBook()
         {
             return View(new CreateBookModel
@@ -40,7 +42,8 @@ namespace reciprocity.Controllers
             });
         }
 
-        [HttpPost, Route("create-book")]
+        [HttpPost]
+        [Route("create-book")]
         public async Task<IActionResult> CreateBook(CreateBookModel model)
         {
             if (!ModelState.IsValid)
@@ -52,7 +55,8 @@ namespace reciprocity.Controllers
             return RedirectToAction("Index", "Book", key);
         }
 
-        [HttpGet, Route("error/{statusCode?}")]
+        [HttpGet]
+        [Route("error/{statusCode?}")]
         public IActionResult Error(int? statusCode)
         {
             return View(new ErrorViewModel

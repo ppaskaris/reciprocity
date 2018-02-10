@@ -166,5 +166,31 @@ namespace reciprocity.Services.Default
                 };
             }
         }
+
+        async Task IDataService.UpdateRecipe(Guid bookId, Guid recipeId, EditRecipeModel fragment)
+        {
+            using (var connection = GetConnection())
+            {
+                await connection.ExecuteAsync(
+                    @"
+                    UPDATE BookRecipe
+                    SET
+                        [Name] = @name,
+                        [Description] = @description,
+                        Servings = @servings,
+                        LastModifiedAt = @now
+                    WHERE BookId = @bookId AND RecipeId = @recipeId;
+                    ",
+                    new
+                    {
+                        bookId,
+                        recipeId,
+                        name = fragment.Name,
+                        description = fragment.Description,
+                        servings = fragment.Servings,
+                        now = DateTime.UtcNow,
+                    });
+            }
+        }
     }
 }
