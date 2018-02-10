@@ -34,7 +34,8 @@ namespace reciprocity.Controllers
                 return NotFound();
             }
 
-            return View(book);
+            var viewModel = await _bookService.GetBookViewAsync(book.BookId);
+            return View(viewModel);
         }
 
         [HttpGet]

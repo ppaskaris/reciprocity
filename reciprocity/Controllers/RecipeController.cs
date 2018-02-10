@@ -29,30 +29,34 @@ namespace reciprocity.Controllers
                 return BadRequest();
             }
 
-            var recipe = await GetRecipeAsync(key);
+            var (book, recipe) = await GetRecipeAsync(key);
             if (recipe == null)
             {
                 return NotFound();
             }
 
-            return View(recipe);
+            return View(new RecipeViewModel
+            {
+                Book = book,
+                Recipe = recipe
+            });
         }
 
-        private async Task<RecipeModel> GetRecipeAsync(RecipeKeyModel key)
+        private async Task<(BookModel, RecipeModel)> GetRecipeAsync(RecipeKeyModel key)
         {
             var book = await _bookService.GetBookAsync(key.BookId.Value);
             if (book == null)
             {
-                return null;
+                return default;
             }
             if (!book.Token.TimingSafeEquals(key.Token))
             {
-                return null;
+                return default;
             }
             var recipe = await _recipeService.GetRecipeAsync(
                 key.BookId.Value,
                 key.RecipeId.Value);
-            return recipe;
+            return (book, recipe);
         }
     }
 }

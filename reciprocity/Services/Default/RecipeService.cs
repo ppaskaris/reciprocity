@@ -55,8 +55,7 @@ namespace reciprocity.Services.Default
                     @"
                     SELECT BookId, RecipeId, Title, Servings, AddedAt, LastModifiedAt
                     FROM BookRecipe
-                    WHERE BookId = @bookId
-                        AND RecipeId = @recipeId;
+                    WHERE BookId = @bookId AND RecipeId = @recipeId;
                     ",
                     new { bookId, recipeId }
                 );

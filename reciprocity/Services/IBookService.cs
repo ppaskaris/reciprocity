@@ -12,5 +12,6 @@ namespace reciprocity.Services
         Task<BookModel> GetBookAsync(Guid id);
         Task RenameBookAsync(Guid id, string title);
         Task DeleteBookAsync(Guid id);
+        Task<BookViewModel> GetBookViewAsync(Guid bookId);
     }
 }

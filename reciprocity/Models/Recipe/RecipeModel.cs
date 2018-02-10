@@ -12,6 +12,7 @@ namespace reciprocity.Models.Recipe
 
         public string Title { get; set; }
         public int Servings { get; set; }
+        public TimeSpan ReadyIn { get; set; }
 
         public DateTime AddedAt { get; set; }
         public DateTime LastModifiedAt { get; set; }

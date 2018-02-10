@@ -1,9 +1,14 @@
-﻿@model reciprocity.Models.Book.BookModel
+﻿@model reciprocity.Models.Book.BookViewModel
 @{
-    ViewData["Title"] = Model.Title;
+    ViewData["Title"] = Model.Book.Title;
 }
 
-<h1>@Model.Title</h1>
+<ol class="breadcrumb">
+    <li><a asp-action="Index" asp-controller="Home">Home</a></li>
+    <li>@Model.Book.Title</li>
+</ol>
+
+<h1>@ViewData["Title"]</h1>
 <p>
     This is a <strong>secret recipe book</strong> that is only visible to those
     with a copy of <a asp-action="Index">this link</a>. Consider bookmarking it
@@ -11,14 +16,35 @@
 </p>
 
 <h2>Recipes</h2>
-<p>
-    <em>No recipes added.</em>
-</p>
+@if (Model.Recipes.Any())
+{
+    <div class="list-group recipe-list clearfix" role="list">
+        @foreach (var recipe in Model.Recipes)
+        {
+            <a class="list-group-item recipe-list-item" role="listitem"
+               asp-action="Index" asp-controller="Recipe"
+               asp-route-recipeid="@recipe.RecipeId">
+                <h3 class="list-group-item-heading">@recipe.Title</h3>
+                @Html.Partial("RecipeStatsPartial", recipe)
+                <p class="list-group-item-text">
+                    <em>No description added.</em>
+                </p>
+            </a>
+        }
+    </div>
+    <div class="recipe-list-spacer"></div>
+}
+else
+{
+    <p>
+        <em>No recipes added.</em>
+    </p>
+}
 <p>
     <a class="btn btn-default" asp-action="AddRecipe">Add Recipe</a>
 </p>
 
-<h2>Settings</h2>
+<h2>Actions</h2>
 <p>
     <a class="btn btn-default" asp-action="Edit">Edit Recipe Book</a>
     <a class="btn btn-danger" asp-action="Delete">Delete Recipe Book</a>

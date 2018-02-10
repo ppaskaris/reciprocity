@@ -1,0 +1,34 @@
+﻿@model reciprocity.Models.Recipe.RecipeModel
+
+<ul class="list-inline">
+    <li>
+        <span class="glyphicon glyphicon-user"
+              title="Serves" aria-hidden="true"></span>
+        <span class="text-hide">Serves:</span>
+        @Model.Servings
+    </li>
+    <li>
+        <span class="glyphicon glyphicon-stats"
+              title="Calories per serving" aria-hidden="true"></span>
+        <span class="text-hide">Calories per serving:</span>
+        0
+    </li>
+    <li>
+        <span class="glyphicon glyphicon-time"
+              title="Ready in" aria-hidden="true"></span>
+        <span class="text-hide">Ready in:</span>
+        @Model.ReadyIn.Humanize()
+    </li>
+    <li>
+        <span class="glyphicon glyphicon-calendar"
+              title="Added" aria-hidden="true"></span>
+        <span class="text-hide">Added:</span>
+        @Model.AddedAt.Humanize()
+    </li>
+    <li>
+        <span class="glyphicon glyphicon-pencil"
+              title="Added" aria-hidden="true"></span>
+        <span class="text-hide">Last modified:</span>
+        @Model.LastModifiedAt.Humanize()
+    </li>
+</ul>

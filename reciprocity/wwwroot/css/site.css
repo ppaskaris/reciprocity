@@ -14,3 +14,21 @@
     padding-left: 15px;
     padding-right: 15px;
 }
+
+/* Book/Index */
+
+@media(min-width: 768px) {
+    .recipe-list {
+        margin: -2px;
+    }
+
+    .recipe-list-item {
+        float: left;
+        margin: 2px;
+        width: calc(50% - 4px);
+    }
+
+    .recipe-list-spacer {
+        margin-bottom: 20px;
+    }
+}

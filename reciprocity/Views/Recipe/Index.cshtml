@@ -1,8 +1,38 @@
-﻿@model reciprocity.Models.Recipe.RecipeModel
+﻿@model reciprocity.Models.Recipe.RecipeViewModel
 
 @{
-    ViewData["Title"] = Model.Title;
+    ViewData["Title"] = Model.Recipe.Title;
 }
 
-<h1>@ViewData["Title"]</h1>
+<ol class="breadcrumb">
+    <li><a asp-action="Index" asp-controller="Home">Home</a></li>
+    <li><a asp-action="Index" asp-controller="Book">@Model.Book.Title</a></li>
+    <li class="active">@Model.Recipe.Title</li>
+</ol>
 
+<h1>@ViewData["Title"]</h1>
+@Html.Partial("RecipeStatsPartial", Model.Recipe)
+<p>
+    <em>No description added.</em>
+</p>
+
+<a class="btn btn-default" asp-action="Edit">Edit Recipe</a>
+
+<h2>Ingredients</h2>
+<p>
+    <em>No ingredients added.</em>
+</p>
+
+<a class="btn btn-default" asp-action="EditIngredients">Edit Ingredients</a>
+
+<h2>Instructions</h2>
+<p>
+    <em>No instructions added.</em>
+</p>
+
+<a class="btn btn-default" asp-action="Edit">Edit Instructions</a>
+
+<h2>Actions</h2>
+<a class="btn btn-default" asp-action="Delete">Share Recipe</a>
+<a class="btn btn-default" asp-action="Delete">Copy to New Recipe</a>
+<a class="btn btn-danger" asp-action="Delete">Delete Recipe</a>
