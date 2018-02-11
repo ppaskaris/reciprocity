@@ -445,7 +445,8 @@ namespace reciprocity.Services.Default
                     SELECT
                         BookRecipeIngredient.[Name],
                         BookRecipeIngredient.Quantity,
-                        Unit.Abbreviation AS Unit
+                        Unit.[Name] AS UnitName,
+                        Unit.Abbreviation AS UnitAbbreviation
                     FROM BookRecipeIngredient
                     INNER JOIN Unit
                          ON Unit.UnitTypeCode = BookRecipeIngredient.QuantityType

@@ -49,7 +49,7 @@ VALUES
 	('m', 'oz', 'ounces', 'oz', 1),
 	('m', 'kg', 'kilograms', 'kg', 2),
 	('v', 'tsp', 'teaspoons', 'tsp', 1),
-	('v', 'tbs', 'tablespoons', 'tbsp', 2),
+	('v', 'tbs', 'tablespoons', 'tbs', 2),
 	('v', 'oz', 'fluid ounces', 'fl oz', 3),
 	('v', 'cup', 'cups', 'C', 4),
 	('v', 'ml', 'milliliters', 'mL', 5),

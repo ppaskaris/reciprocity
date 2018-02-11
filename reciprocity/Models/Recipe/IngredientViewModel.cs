@@ -9,6 +9,7 @@ namespace reciprocity.Models.Recipe
     {
         public string Name { get; set; }
         public string Quantity { get; set; }
-        public string Unit { get; set; }
+        public string UnitName { get; set; }
+        public string UnitAbbreviation { get; set; }
     }
 }

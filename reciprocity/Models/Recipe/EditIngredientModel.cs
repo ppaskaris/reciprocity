@@ -46,7 +46,7 @@ namespace reciprocity.Models.Recipe
             if (QuantityUnit[0] != ServingUnit[0])
             {
                 yield return new ValidationResult(
-                    "The Unit fields must agree on the type of unit (mass or volume).",
+                    "Both Unit fields must be the same type.",
                     new[]
                     {
                         "QuantityUnit",

@@ -46,8 +46,8 @@ else
             @foreach (var ingredient in Model.Ingredients)
             {
                 <tr>
-                    <td style="text-align:right;">@ingredient.Quantity</td>
-                    <td>@ingredient.Unit</td>
+                    <td class="text-right">@ingredient.Quantity</td>
+                    <td><abbr title="@ingredient.UnitName">@ingredient.UnitAbbreviation</abbr></td>
                     <td>@ingredient.Name</td>
                 </tr>
             }

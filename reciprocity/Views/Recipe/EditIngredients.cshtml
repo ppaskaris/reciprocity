@@ -13,7 +13,7 @@
 <h1>@ViewData["Title"]</h1>
 <form asp-action="SaveIngredients">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-    <table class="table table-hover" style="table-layout:fixed;">
+    <table class="table" style="table-layout:fixed;">
         <colgroup>
             @if (Model.ShowBulkActions)
             {
@@ -30,7 +30,7 @@
             <tr>
                 @if (Model.ShowBulkActions)
                 {
-                    <th style="text-align:center;">
+                    <th class="text-center">
                         <span class="glyphicon glyphicon-th-list"
                               title="Bulk Select" aria-hidden="true"></span>
                         <span class="sr-only">bulk select</span>
