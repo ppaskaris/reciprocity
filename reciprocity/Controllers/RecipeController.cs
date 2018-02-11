@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Dapper;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using reciprocity.Models.Book;
 using reciprocity.Models.Recipe;
 using reciprocity.Services;
@@ -34,10 +34,14 @@ namespace reciprocity.Controllers
                 return BadRequest();
             }
 
+            var ingredients = await _dataService
+                .GetIngredientsViewAsync(recipe.BookId, recipe.RecipeId);
+
             return View(new RecipeViewModel
             {
                 Book = book,
-                Recipe = recipe
+                Recipe = recipe,
+                Ingredients = ingredients
             });
         }
 
@@ -124,8 +128,8 @@ namespace reciprocity.Controllers
         }
 
         [HttpGet]
-        [Route("edit-ingredients")]
-        public async Task<IActionResult> EditIngredients(RecipeKeyModel key, EditIngredientsBonusActionType? bonusAction)
+        [Route("ingredients")]
+        public async Task<IActionResult> EditIngredients(RecipeKeyModel key, bool addNew)
         {
             var (book, recipe) = await GetRecipeAsync(key);
             if (recipe == null)
@@ -138,12 +142,19 @@ namespace reciprocity.Controllers
                 return BadRequest();
             }
 
-            // TODO: Generate the view models in the data service guy.
             var units = await _dataService.GetUnitsAsync();
             var ingredients0 = await _dataService
                 .GetIngredientsAsync(recipe.BookId, recipe.RecipeId);
+            var ingredients = ingredients0.AsList();
 
-            var ingredients = ingredients0
+            if (ingredients.Count <= 0)
+            {
+                addNew = true;
+            }
+
+            var showBulkActions = !addNew;
+
+            var viewModels = ingredients0
                 .Select(ingredient => new EditIngredientViewModel
                 {
                     IngredientNo = ingredient.IngredientNo,
@@ -152,27 +163,17 @@ namespace reciprocity.Controllers
                     QuantityUnit = $"{ingredient.QuantityType},{ingredient.QuantityUnit}",
                     Serving = ingredient.Serving,
                     ServingUnit = $"{ingredient.ServingType},{ingredient.ServingUnit}",
-                    CaloriesPerServing = ingredient.CaloriesPerServing,
-                    Units = units
+                    CaloriesPerServing = ingredient.CaloriesPerServing
                 })
                 .ToList();
 
-            if (ingredients.Count <= 0)
+            if (addNew == true)
             {
-                ingredients.Add(new EditIngredientViewModel
+                int lastIngredientNo = viewModels.LastOrDefault()?.IngredientNo ?? 0;
+                viewModels.Add(new EditIngredientViewModel
                 {
-                    IngredientNo = 1,
-                    AutoFocus = true,
-                    Units = units
-                });
-            }
-            else if (bonusAction == EditIngredientsBonusActionType.AddIngredient)
-            {
-                ingredients.Add(new EditIngredientViewModel
-                {
-                    IngredientNo = ingredients.Last().IngredientNo + 1,
-                    AutoFocus = true,
-                    Units = units
+                    IngredientNo = lastIngredientNo + 1,
+                    AutoFocus = true
                 });
             }
 
@@ -180,12 +181,15 @@ namespace reciprocity.Controllers
             {
                 Book = book,
                 Recipe = recipe,
-                Ingredients = ingredients
+                Ingredients = viewModels,
+                Units = units,
+                AddNew = addNew,
+                ShowBulkActions = showBulkActions
             });
         }
 
         [HttpPost]
-        [Route("edit-ingredients")]
+        [Route("ingredients")]
         public async Task<IActionResult> EditIngredients(RecipeKeyModel key, EditIngredientsModel model)
         {
             var (book, recipe) = await GetRecipeAsync(key);
@@ -197,17 +201,18 @@ namespace reciprocity.Controllers
             if (!ModelState.IsValid)
             {
                 var units = await _dataService.GetUnitsAsync();
-                var ingredients = model.Ingredients
+                var showBulkActions = !model.AddNew;
+                var viewModels = model.Ingredients
                     .Select(ingredient => new EditIngredientViewModel
                     {
+                        Checked = ingredient.Checked,
                         IngredientNo = ingredient.IngredientNo,
                         Name = ingredient.Name,
                         Quantity = ingredient.Quantity,
                         QuantityUnit = ingredient.QuantityUnit,
                         Serving = ingredient.Serving,
                         ServingUnit = ingredient.ServingUnit,
-                        CaloriesPerServing = ingredient.CaloriesPerServing,
-                        Units = units
+                        CaloriesPerServing = ingredient.CaloriesPerServing
                     })
                     .ToList();
 
@@ -215,16 +220,33 @@ namespace reciprocity.Controllers
                 {
                     Book = book,
                     Recipe = recipe,
-                    Ingredients = ingredients
+                    Ingredients = viewModels,
+                    Units = units,
+                    AddNew = model.AddNew,
+                    ShowBulkActions = showBulkActions
                 });
             }
 
+            IEnumerable<EditIngredientModel> ingredients = model.Ingredients;
+            if (model.SaveAction == SaveActionType.RemoveChecked)
+            {
+                ingredients = ingredients
+                    .Where(ingredient => ingredient.Checked == false);
+            }
+
             await _dataService
-                .SaveIngredientsAsync(recipe.BookId, recipe.RecipeId, model.Ingredients);
+                .SaveIngredientsAsync(recipe.BookId, recipe.RecipeId, ingredients);
 
-            return RedirectToAction("EditIngredients", new { model.BonusAction });
+            switch (model.SaveAction)
+            {
+                case SaveActionType.AddNew:
+                    return RedirectToAction("EditIngredients", new { AddNew = true });
+                case SaveActionType.RemoveChecked:
+                    return RedirectToAction("EditIngredients", new { AddNew = false });
+                default:
+                    return RedirectToAction("Index");
+            }
         }
-
 
         #region Helpers
 

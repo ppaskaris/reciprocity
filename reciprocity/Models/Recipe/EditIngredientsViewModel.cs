@@ -1,4 +1,5 @@
-﻿using reciprocity.Models.Book;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using reciprocity.Models.Book;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,11 @@ namespace reciprocity.Models.Recipe
     {
         public BookModel Book { get; set; }
         public RecipeModel Recipe { get; set; }
+
         public List<EditIngredientViewModel> Ingredients { get; set; }
+        public IEnumerable<SelectListItem> Units { get; set; }
+
+        public bool AddNew { get; set; }
+        public bool ShowBulkActions { get; set; }
     }
 }

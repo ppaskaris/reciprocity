@@ -1,15 +1,22 @@
 ﻿@model reciprocity.Models.Recipe.EditIngredientViewModel
 
+@{
+    var units = (IEnumerable<SelectListItem>)ViewData["Units"];
+    bool showBulkActions = (bool)ViewData["ShowBulkActions"];
+}
 <tr>
+    @if (showBulkActions)
+    {
+        <td>
+            <label asp-for="Checked" class="sr-only"></label>
+            <input asp-for="Checked" class="form-control" />
+            <span asp-validation-for="Checked" class="text-danger"></span>
+        </td>
+    }
     <td>
-        <label asp-for="IngredientNo" class="sr-only"></label>
-        <p class="form-control-static"><strong>@Model.IngredientNo</strong></p>
         <input asp-for="IngredientNo" type="hidden" />
-        <span asp-validation-for="IngredientNo" class="text-danger"></span>
-    </td>
-    <td>
         <label asp-for="Name" class="sr-only"></label>
-        <input asp-for="Name" class="form-control" autofocus=@Model.AutoFocus />
+        <input asp-for="Name" class="form-control @(Model.AutoFocus ? "js-autofocus": "")" />
         <span asp-validation-for="Name" class="text-danger"></span>
     </td>
     <td>
@@ -19,7 +26,7 @@
     </td>
     <td>
         <label asp-for="QuantityUnit" class="sr-only"></label>
-        <select asp-for="QuantityUnit" asp-items="Model.Units" class="form-control"></select>
+        <select asp-for="QuantityUnit" asp-items="units" class="form-control"></select>
         <span asp-validation-for="QuantityUnit" class="text-danger"></span>
     </td>
     <td>
@@ -34,7 +41,7 @@
     </td>
     <td>
         <label asp-for="ServingUnit" class="sr-only"></label>
-        <select asp-for="ServingUnit" asp-items="Model.Units" class="form-control"></select>
+        <select asp-for="ServingUnit" asp-items="units" class="form-control"></select>
         <span asp-validation-for="ServingUnit" class="text-danger"></span>
     </td>
 </tr>

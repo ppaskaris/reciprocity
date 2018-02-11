@@ -10,8 +10,9 @@ namespace reciprocity.Models.Recipe
     {
         [Required]
         [Range(0, 100)]
-        [Display(Name = "#")]
         public int? IngredientNo { get; set; }
+
+        public bool Checked { get; set; }
 
         [Required]
         [MaxLength(100)]

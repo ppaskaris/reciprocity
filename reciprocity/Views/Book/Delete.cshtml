@@ -14,6 +14,8 @@
 </p>
 <form asp-action="Delete">
     <input type="hidden" name="Confirm" value="true" />
-    <input type="submit" value="Delete Recipe Book" class="btn btn-danger" />
-    <a asp-action="Index" class="btn btn-default">Cancel</a>
+    <div class="form-group">
+        <input type="submit" value="Delete Recipe Book" class="btn btn-danger" />
+        <a asp-action="Index" class="btn btn-default">Cancel</a>
+    </div>
 </form>

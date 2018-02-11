@@ -45,14 +45,14 @@ CREATE TABLE Unit (
 INSERT INTO Unit
 	(UnitTypeCode, UnitCode, [Name], Abbreviation, Tier)
 VALUES
-	('m', 'g', 'gram', 'g', 1),
-	('m', 'oz', 'ounce', 'oz', 1),
-	('m', 'kg', 'kilogram', 'kg', 2),
-	('v', 'tsp', 'teaspoon', 'tsp', 1),
-	('v', 'tbs', 'tablespoon', 'tbsp', 2),
-	('v', 'oz', 'fluid ounce', 'fl oz', 3),
-	('v', 'cup', 'cup', 'C', 4),
-	('v', 'ml', 'milliliter', 'mL', 5),
+	('m', 'g', 'grams', 'g', 1),
+	('m', 'oz', 'ounces', 'oz', 1),
+	('m', 'kg', 'kilograms', 'kg', 2),
+	('v', 'tsp', 'teaspoons', 'tsp', 1),
+	('v', 'tbs', 'tablespoons', 'tbsp', 2),
+	('v', 'oz', 'fluid ounces', 'fl oz', 3),
+	('v', 'cup', 'cups', 'C', 4),
+	('v', 'ml', 'milliliters', 'mL', 5),
 	('v', 'l', 'liter', 'L', 6);
 
 

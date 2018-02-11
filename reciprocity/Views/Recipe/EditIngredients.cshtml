@@ -1,6 +1,6 @@
 ﻿@model reciprocity.Models.Recipe.EditIngredientsViewModel
 @{
-    ViewData["Title"] = "Edit Ingredients";
+    ViewData["Title"] = Model.AddNew ? "Add Ingredients" : "Edit Ingredients";
 }
 
 <ol class="breadcrumb">
@@ -11,22 +11,27 @@
 </ol>
 
 <h1>@ViewData["Title"]</h1>
-<p></p>
 <form asp-action="EditIngredients">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <table class="table table-hover" style="table-layout:fixed;">
         <colgroup>
-            <col style="width:30px;">
-            <col>
-            <col style="width:100px;">
-            <col style="width:150px;">
-            <col style="width:100px;">
-            <col style="width:100px;">
-            <col style="width:150px;">
+            @if (Model.ShowBulkActions)
+            {
+                <col style="width:40px;" />
+            }
+            <col />
+            <col style="width:100px;" />
+            <col style="width:150px;" />
+            <col style="width:100px;" />
+            <col style="width:100px;" />
+            <col style="width:150px;" />
         </colgroup>
         <thead>
             <tr>
-                <th>@Html.DisplayNameFor(model => model.Ingredients.First().IngredientNo)</th>
+                @if (Model.ShowBulkActions)
+                {
+                    <th><span class="sr-only">bulk select</span></th>
+                }
                 <th>@Html.DisplayNameFor(model => model.Ingredients.First().Name)</th>
                 <th>@Html.DisplayNameFor(model => model.Ingredients.First().Quantity)</th>
                 <th>@Html.DisplayNameFor(model => model.Ingredients.First().QuantityUnit)</th>
@@ -38,16 +43,45 @@
         <tbody class="js-AddIngredientContainer">
             @for (var i = 0; i < Model.Ingredients.Count; ++i)
             {
-                @Html.EditorFor(model => Model.Ingredients[i])
+                @Html.EditorFor(model => Model.Ingredients[i], new
+                {
+                    Model.Units,
+                    Model.ShowBulkActions
+                })
             }
         </tbody>
     </table>
     <div class="form-group">
         <button type="submit" class="btn btn-primary"
-                name="BonusAction" value="AddIngredient">
-            Save and Add Ingredient
+                name="SaveAction" value="AddNew">
+            Save and Add
         </button>
-        <button type="submit" class="btn btn-default">Save Ingredients</button>
+        <button type="submit" class="btn btn-default"
+                name="SaveAction" value="GoBack">
+            Save and Return
+        </button>
+        @if (Model.ShowBulkActions)
+        {
+            <div class="btn-group">
+                <button type="button" class="btn btn-danger dropdown-toggle"
+                        data-toggle="dropdown" aria-haspopup="true"
+                        aria-expanded="false">
+                    Bulk Actions <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a href="javascript:void(0)"
+                           onclick="ProxyLinkToButton(event, 'RemoveCheckedProxy')">
+                            Remove Selected
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <button id="RemoveCheckedProxy" type="submit" class="hidden"
+                    name="SaveAction" value="RemoveChecked">
+                Remove Selected
+            </button>
+        }
         <a asp-action="Index" class="btn btn-default">Cancel</a>
     </div>
 </form>

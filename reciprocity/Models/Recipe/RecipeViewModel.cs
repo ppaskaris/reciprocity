@@ -10,5 +10,6 @@ namespace reciprocity.Models.Recipe
     {
         public BookModel Book { get; set; }
         public RecipeModel Recipe { get; set; }
+        public IEnumerable<IngredientViewModel> Ingredients { get; set; }
     }
 }

@@ -281,11 +281,14 @@ namespace reciprocity.Services.Default
                         ServingUnit,
                         CaloriesPerServing
                     FROM BookRecipeIngredient
-                    WHERE BookId = @bookId AND RecipeId = @recipeId;
+                    WHERE BookId = @bookId AND RecipeId = @recipeId
+                    ORDER BY IngredientNo;
                     ",
                     new { bookId, recipeId });
             }
         }
+
+        #region SaveIngredientsAsync Helpers
 
         private static readonly SqlMetaData[] BookRecipeIngredientMetaData =
         {
@@ -337,73 +340,120 @@ namespace reciprocity.Services.Default
             return dataRecord;
         }
 
+        #endregion
+
         async Task IDataService.SaveIngredientsAsync(Guid bookId, Guid recipeId, IEnumerable<EditIngredientModel> ingredients)
         {
             var now = DateTime.UtcNow;
-            var ingredientTable = ingredients
+            var ingredientRecords = ingredients
                 .Select(CreateBookRecipeIngredientRecord)
-                .AsTableValuedParameter("SaveBookRecipeIngredient");
+                .ToList();
             using (var connection = GetConnection())
             {
-                await connection.ExecuteAsync(
-                    @"
-                    MERGE INTO BookRecipeIngredient target
-                    USING @ingredientTable source
-                         ON target.BookId = @bookId
-                        AND target.RecipeId = @recipeId
-                        AND target.IngredientNo = source.IngredientNo
-                    WHEN MATCHED THEN
-                        UPDATE SET
-                            [Name] = source.[Name],
-                            Quantity = source.Quantity,
-                            QuantityType = source.QuantityType,
-                            QuantityUnit = source.QuantityUnit,
-                            Serving = source.Serving,
-                            ServingType = source.ServingType,
-                            ServingUnit = source.ServingUnit,
-                            CaloriesPerServing = source.CaloriesPerServing
-                    WHEN NOT MATCHED BY TARGET THEN
-                        INSERT (
-                            BookId,
-                            RecipeId,
-                            IngredientNo,
-                            [Name],
-                            Quantity,
-                            QuantityType,
-                            QuantityUnit,
-                            Serving,
-                            ServingType,
-                            ServingUnit,
-                            CaloriesPerServing
-                        ) VALUES (
-                            @bookId,
-                            @recipeId,
-                            source.IngredientNo,
-                            source.[Name],
-                            source.Quantity,
-                            source.QuantityType,
-                            source.QuantityUnit,
-                            source.Serving,
-                            source.ServingType,
-                            source.ServingUnit,
-                            source.CaloriesPerServing
-                        )
-                    WHEN NOT MATCHED BY SOURCE
-                        AND target.BookId = @bookId
-                        AND target.RecipeId = @recipeId THEN
-                            DELETE;
+                if (ingredientRecords.Count > 0)
+                {
 
-                    UPDATE BookRecipe
-                    SET LastModifiedAt = @now
-                    WHERE BookId = @bookId AND RecipeId = @recipeId;
+                    var ingredientTable = ingredientRecords
+                        .AsTableValuedParameter("SaveBookRecipeIngredient");
+                    await connection.ExecuteAsync(
+                        @"
+                        MERGE INTO BookRecipeIngredient target
+                        USING @ingredientTable source
+                             ON target.BookId = @bookId
+                            AND target.RecipeId = @recipeId
+                            AND target.IngredientNo = source.IngredientNo
+                        WHEN MATCHED THEN
+                            UPDATE SET
+                                [Name] = source.[Name],
+                                Quantity = source.Quantity,
+                                QuantityType = source.QuantityType,
+                                QuantityUnit = source.QuantityUnit,
+                                Serving = source.Serving,
+                                ServingType = source.ServingType,
+                                ServingUnit = source.ServingUnit,
+                                CaloriesPerServing = source.CaloriesPerServing
+                        WHEN NOT MATCHED BY TARGET THEN
+                            INSERT (
+                                BookId,
+                                RecipeId,
+                                IngredientNo,
+                                [Name],
+                                Quantity,
+                                QuantityType,
+                                QuantityUnit,
+                                Serving,
+                                ServingType,
+                                ServingUnit,
+                                CaloriesPerServing
+                            ) VALUES (
+                                @bookId,
+                                @recipeId,
+                                source.IngredientNo,
+                                source.[Name],
+                                source.Quantity,
+                                source.QuantityType,
+                                source.QuantityUnit,
+                                source.Serving,
+                                source.ServingType,
+                                source.ServingUnit,
+                                source.CaloriesPerServing
+                            )
+                        WHEN NOT MATCHED BY SOURCE
+                            AND target.BookId = @bookId
+                            AND target.RecipeId = @recipeId THEN
+                                DELETE;
+
+                        UPDATE BookRecipe
+                        SET LastModifiedAt = @now
+                        WHERE BookId = @bookId AND RecipeId = @recipeId;
+                        ",
+                        new
+                        {
+                            bookId,
+                            recipeId,
+                            ingredientTable,
+                            now
+                        });
+                }
+                else
+                {
+                    await connection.ExecuteAsync(
+                        @"
+                        DELETE FROM BookRecipeIngredient
+                        WHERE BookId = @bookId AND RecipeID = @recipeId;
+
+                        UPDATE BookRecipe
+                        SET LastModifiedAt = @now
+                        WHERE BookId = @bookId AND RecipeId = @recipeId;
+                        ",
+                        new
+                        {
+                            bookId,
+                            recipeId,
+                            now
+                        });
+                }
+            }
+        }
+
+        async Task<IEnumerable<IngredientViewModel>> IDataService.GetIngredientsViewAsync(Guid bookId, Guid recipeId)
+        {
+            using (var connection = GetConnection())
+            {
+                return await connection.QueryAsync<IngredientViewModel>(
+                    @"
+                    SELECT
+                        BookRecipeIngredient.[Name],
+                        BookRecipeIngredient.Quantity,
+                        Unit.Abbreviation AS Unit
+                    FROM BookRecipeIngredient
+                    INNER JOIN Unit
+                         ON Unit.UnitTypeCode = BookRecipeIngredient.QuantityType
+                        AND Unit.UnitCode = BookRecipeIngredient.QuantityUnit
+                    WHERE BookId = @bookId AND RecipeId = @recipeId
+                    ORDER BY IngredientNo
                     ",
-                    new
-                    {
-                        bookId,
-                        recipeId,
-                        ingredientTable,
-                        now
-                    });
+                    new { bookId, recipeId });
             }
         }
     }

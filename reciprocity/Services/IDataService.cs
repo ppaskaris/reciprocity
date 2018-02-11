@@ -22,5 +22,6 @@ namespace reciprocity.Services
         Task<IEnumerable<SelectListItem>> GetUnitsAsync();
         Task<IEnumerable<IngredientModel>> GetIngredientsAsync(Guid bookId, Guid recipeId);
         Task SaveIngredientsAsync(Guid bookId, Guid recipeId, IEnumerable<EditIngredientModel> ingredients);
+        Task<IEnumerable<IngredientViewModel>> GetIngredientsViewAsync(Guid bookId, Guid recipeId);
     }
 }

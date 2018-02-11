@@ -12,6 +12,9 @@ namespace reciprocity.Models.Recipe
         [MinLength(1)]
         public List<EditIngredientModel> Ingredients { get; set; }
 
-        public EditIngredientsBonusActionType? BonusAction { get; set; }
+        public bool AddNew { get; set; }
+
+        [Required]
+        public SaveActionType? SaveAction { get; set; }
     }
 }

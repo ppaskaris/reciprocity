@@ -22,21 +22,63 @@ else
         <em>No description added.</em>
     </p>
 }
-<a class="btn btn-default" asp-action="Edit">Edit Recipe</a>
+<p>
+    <a class="btn btn-default" asp-action="Edit">Edit Recipe</a>
+</p>
 
 <h2>Ingredients</h2>
-<p>
-    <em>No ingredients added.</em>
-</p>
-<a class="btn btn-default" asp-action="EditIngredients">Edit Ingredients</a>
+@if (Model.Ingredients.Any())
+{
+    <table class="table" style="table-layout:fixed;">
+        <colgroup>
+            <col style="width:80px;" />
+            <col style="width:50px;" />
+            <col />
+        </colgroup>
+        <thead>
+            <tr>
+                <th>Quantity</th>
+                <th>Unit</th>
+                <th>Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var ingredient in Model.Ingredients)
+            {
+                <tr>
+                    <td style="text-align:right;">@ingredient.Quantity</td>
+                    <td>@ingredient.Unit</td>
+                    <td>@ingredient.Name</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <p>
+        <a class="btn btn-default" asp-action="EditIngredients" asp-route-AddNew="True">Add Ingredients</a>
+        <a class="btn btn-default" asp-action="EditIngredients">Edit Ingredients</a>
+    </p>
+}
+else
+{
+    <p>
+        <em>No ingredients added.</em>
+    </p>
+    <p>
+        <a class="btn btn-default" asp-action="EditIngredients" asp-route-AddNew="True">Add Ingredients</a>
+    </p>
+}
 
 <h2>Instructions</h2>
 <p>
     <em>No instructions added.</em>
 </p>
-<a class="btn btn-default" asp-action="EditInstructions">Edit Instructions</a>
+<p>
+    <a class="btn btn-default" asp-action="EditInstructions">Edit Instructions</a>
+</p>
 
 <h2>Actions</h2>
-<a class="btn btn-default" asp-action="Share">Share Recipe</a>
-<a class="btn btn-default" asp-action="Copy">Copy to New Recipe</a>
-<a class="btn btn-default" asp-action="Delete">Delete Recipe</a>
+<p>
+    <a class="btn btn-default" asp-action="Share">Share Recipe</a>
+    <a class="btn btn-default" asp-action="Copy">Copy to New Recipe</a>
+    <a class="btn btn-default" asp-action="Delete">Delete Recipe</a>
+</p>

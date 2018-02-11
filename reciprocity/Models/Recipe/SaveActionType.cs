@@ -5,8 +5,10 @@ using System.Threading.Tasks;
 
 namespace reciprocity.Models.Recipe
 {
-    public enum EditIngredientsBonusActionType
+    public enum SaveActionType
     {
-        AddIngredient
+        AddNew,
+        GoBack,
+        RemoveChecked
     }
 }
