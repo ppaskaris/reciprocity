@@ -20,6 +20,7 @@ namespace reciprocity.Models.Recipe
 
         [Required]
         [Range(Constants.MeasurementMin, Constants.MeasurementMax)]
+        [RegularExpression(Constants.MeasurementPattern, ErrorMessage = Constants.MeasurementErrorMessage)]
         public decimal? Quantity { get; set; }
 
         [Required]
@@ -29,6 +30,7 @@ namespace reciprocity.Models.Recipe
 
         [Required]
         [Range(Constants.MeasurementMin, Constants.MeasurementMax)]
+        [RegularExpression(Constants.MeasurementPattern, ErrorMessage = Constants.MeasurementErrorMessage)]
         public decimal? Serving { get; set; }
 
         [Required]
