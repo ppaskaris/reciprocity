@@ -11,7 +11,7 @@
 </ol>
 
 <h1>@ViewData["Title"]</h1>
-@Html.Partial("RecipeStatsPartial", Model.Recipe)
+@Html.Partial("RecipeStatsPartial", Model)
 @if (Model.Recipe.Description != null)
 {
     <p class="recipe-description">@Model.Recipe.Description</p>

@@ -9,6 +9,6 @@ namespace reciprocity.Models.Book
     public class BookViewModel
     {
         public BookModel Book { get; set; }
-        public IEnumerable<RecipeModel> Recipes {get;set;}
+        public IEnumerable<RecipeListItemViewModel> Recipes {get;set;}
     }
 }

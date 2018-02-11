@@ -1,4 +1,4 @@
-﻿@model reciprocity.Models.Recipe.RecipeModel
+﻿@model reciprocity.Models.Recipe.IRecipeStatsViewModel
 
 <ul class="list-inline">
     <li>
@@ -11,7 +11,7 @@
         <span class="glyphicon glyphicon-stats"
               title="Calories per serving" aria-hidden="true"></span>
         <span class="text-hide">Calories per serving:</span>
-        0
+        @Model.CaloriesPerServing
     </li>
     <li>
         <span class="glyphicon glyphicon-time"

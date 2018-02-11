@@ -152,16 +152,26 @@ namespace reciprocity.Services.Default
                 FROM Book
                 WHERE BookId = @bookId;
 
-                SELECT BookId, RecipeId, [Name], [Description], Servings, AddedAt, LastModifiedAt
+                SELECT
+                    BookRecipe.RecipeId,
+                    BookRecipe.[Name],
+                    BookRecipe.[Description],
+                    BookRecipe.Servings,
+                    BookRecipeStatistics.CaloriesPerServing,
+                    BookRecipe.AddedAt,
+                    BookRecipe.LastModifiedAt
                 FROM BookRecipe
-                WHERE BookId = @bookId;
+                LEFT JOIN BookRecipeStatistics
+                    ON BookRecipeStatistics.BookId = BookRecipe.BookId
+                    AND BookRecipeStatistics.RecipeId = BookRecipe.RecipeId
+                WHERE BookRecipe.BookId = @bookId;
                 ";
             var queryParams = new { bookId };
             using (var connection = GetConnection())
             using (var query = await connection.QueryMultipleAsync(queryText, queryParams))
             {
                 var book = await query.ReadFirstAsync<BookModel>();
-                var recipes = await query.ReadAsync<RecipeModel>();
+                var recipes = await query.ReadAsync<RecipeListItemViewModel>();
                 return new BookViewModel
                 {
                     Book = book,
@@ -251,7 +261,7 @@ namespace reciprocity.Services.Default
 
                 SELECT UnitTypeCode, UnitCode, [Name]
                 FROM Unit
-                ORDER BY Tier, [Name] ASC;
+                ORDER BY ConversionRatio, [Name] ASC;
                 ";
             using (var connection = GetConnection())
             using (var query = await connection.QueryMultipleAsync(queryText))
@@ -436,25 +446,37 @@ namespace reciprocity.Services.Default
             }
         }
 
-        async Task<IEnumerable<IngredientViewModel>> IDataService.GetIngredientsViewAsync(Guid bookId, Guid recipeId)
+        async Task<(IEnumerable<IngredientViewModel>, int)> IDataService.GetRecipeViewComponentsAsync(Guid bookId, Guid recipeId)
         {
-            using (var connection = GetConnection())
+            const string queryText =
+                @"
+                SELECT
+                    BookRecipeIngredient.[Name],
+                    BookRecipeIngredient.Quantity,
+                    Unit.[Name] AS UnitName,
+                    Unit.Abbreviation AS UnitAbbreviation
+                FROM BookRecipeIngredient
+                INNER JOIN Unit
+                        ON Unit.UnitTypeCode = BookRecipeIngredient.QuantityType
+                    AND Unit.UnitCode = BookRecipeIngredient.QuantityUnit
+                WHERE BookId = @bookId AND RecipeId = @recipeId
+                ORDER BY IngredientNo;
+
+                SELECT CaloriesPerServing
+                FROM BookRecipeStatistics
+                WHERE BookId = @bookId AND RecipeId = @recipeId;
+                ";
+            var queryParams = new
             {
-                return await connection.QueryAsync<IngredientViewModel>(
-                    @"
-                    SELECT
-                        BookRecipeIngredient.[Name],
-                        BookRecipeIngredient.Quantity,
-                        Unit.[Name] AS UnitName,
-                        Unit.Abbreviation AS UnitAbbreviation
-                    FROM BookRecipeIngredient
-                    INNER JOIN Unit
-                         ON Unit.UnitTypeCode = BookRecipeIngredient.QuantityType
-                        AND Unit.UnitCode = BookRecipeIngredient.QuantityUnit
-                    WHERE BookId = @bookId AND RecipeId = @recipeId
-                    ORDER BY IngredientNo
-                    ",
-                    new { bookId, recipeId });
+                bookId,
+                recipeId
+            };
+            using (var connection = GetConnection())
+            using (var query = await connection.QueryMultipleAsync(queryText, queryParams))
+            {
+                var ingredients = await query.ReadAsync<IngredientViewModel>();
+                var caloriesPerServing = await query.ReadSingleAsync<int>();
+                return (ingredients, caloriesPerServing);
             }
         }
     }

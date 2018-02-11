@@ -34,14 +34,15 @@ namespace reciprocity.Controllers
                 return BadRequest();
             }
 
-            var ingredients = await _dataService
-                .GetIngredientsViewAsync(recipe.BookId, recipe.RecipeId);
+            var (ingredients, caloriesPerServing) = await _dataService
+                .GetRecipeViewComponentsAsync(recipe.BookId, recipe.RecipeId);
 
             return View(new RecipeViewModel
             {
                 Book = book,
                 Recipe = recipe,
-                Ingredients = ingredients
+                Ingredients = ingredients,
+                CaloriesPerServing = caloriesPerServing
             });
         }
 

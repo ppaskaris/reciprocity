@@ -1,14 +1,13 @@
 ﻿-- Drop objects in reverse order, since they depend on each other.
 -- A better database offers "DROP SCHEMA IF EXISTS [dbo] CASCADE" to do this.
 
+DROP VIEW IF EXISTS BookRecipeStatistics;
 DROP TYPE IF EXISTS SaveBookRecipeIngredient;
 DROP TABLE IF EXISTS BookRecipeIngredient;
 DROP TABLE IF EXISTS BookRecipe;
 DROP TABLE IF EXISTS Book;
 DROP TABLE IF EXISTS Unit;
 DROP TABLE IF EXISTS UnitType;
-
--------------------------------------------------------------------------------
 
 GO
 
@@ -33,7 +32,7 @@ CREATE TABLE Unit (
 	UnitCode VARCHAR(3) NOT NULL,
 	[Name] NVARCHAR(100) NOT NULL,
 	Abbreviation NVARCHAR(10) NOT NULL,
-	Tier INT NOT NULL,
+	ConversionRatio DECIMAL(10, 6) NOT NULL,
 
 	CONSTRAINT Unit_PK
 		PRIMARY KEY (UnitTypeCode, UnitCode),
@@ -43,17 +42,17 @@ CREATE TABLE Unit (
 );
 
 INSERT INTO Unit
-	(UnitTypeCode, UnitCode, [Name], Abbreviation, Tier)
+	(UnitTypeCode, UnitCode, [Name], Abbreviation, ConversionRatio)
 VALUES
 	('m', 'g', 'grams', 'g', 1),
-	('m', 'oz', 'ounces', 'oz', 1),
-	('m', 'kg', 'kilograms', 'kg', 2),
-	('v', 'tsp', 'teaspoons', 'tsp', 1),
-	('v', 'tbs', 'tablespoons', 'tbs', 2),
-	('v', 'oz', 'fluid ounces', 'fl oz', 3),
-	('v', 'cup', 'cups', 'C', 4),
-	('v', 'ml', 'milliliters', 'mL', 5),
-	('v', 'l', 'liter', 'L', 6);
+	('m', 'oz', 'ounces', 'oz', 28),
+	('m', 'kg', 'kilograms', 'kg', 1000),
+	('v', 'tsp', 'teaspoons', 'tsp', 5),
+	('v', 'tbs', 'tablespoons', 'tbs', 15),
+	('v', 'oz', 'fluid ounces', 'fl oz', 28.41306),
+	('v', 'cup', 'cups', 'C', 240),
+	('v', 'ml', 'milliliters', 'mL', 1),
+	('v', 'l', 'liter', 'L', 1000);
 
 
 CREATE TABLE Book (
@@ -125,3 +124,33 @@ CREATE TYPE SaveBookRecipeIngredient AS TABLE (
 	ServingUnit VARCHAR(3) NOT NULL,
 	CaloriesPerServing DECIMAL(5, 2) NOT NULL
 );
+
+GO
+
+CREATE VIEW BookRecipeStatistics AS
+SELECT
+	BookId,
+	RecipeId,
+	CAST(CEILING(SUM(Quantity / Serving * CaloriesPerServing / Servings)) AS INT) AS CaloriesPerServing
+FROM (
+	SELECT
+		BookRecipe.BookId,
+		BookRecipe.RecipeId,
+        BookRecipe.Servings,
+		BookRecipeIngredient.Quantity * QuantityUnit.ConversionRatio AS Quantity,
+		BookRecipeIngredient.Serving * ServingUnit.ConversionRatio AS Serving,
+		BookRecipeIngredient.CaloriesPerServing
+	FROM BookRecipe
+	INNER JOIN BookRecipeIngredient
+        ON BookRecipeIngredient.BookId = BookRecipe.BookId
+        AND BookRecipeIngredient.RecipeId = BookRecipe.RecipeId
+	INNER JOIN Unit QuantityUnit
+		ON QuantityUnit.UnitTypeCode = BookRecipeIngredient.QuantityType
+		AND QuantityUnit.UnitCode = BookRecipeIngredient.QuantityUnit
+	INNER JOIN Unit ServingUnit
+		ON ServingUnit.UnitTypeCode = BookRecipeIngredient.ServingType
+		AND ServingUnit.UnitCode = BookRecipeIngredient.ServingUnit
+) unused
+GROUP BY BookId, RecipeId;
+
+GO
