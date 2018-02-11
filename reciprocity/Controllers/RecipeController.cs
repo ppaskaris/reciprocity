@@ -159,8 +159,9 @@ namespace reciprocity.Controllers
                 })
                 .ToList();
 
-            int lastIngredientNo =
-                ingredients.Count > 0 ? ingredients[0].IngredientNo : 0;
+            int lastIngredientNo = ingredients.Count > 0
+                ? ingredients[ingredients.Count - 1].IngredientNo
+                : 0;
             viewModels.Add(new EditIngredientViewModel
             {
                 IngredientNo = lastIngredientNo + 1,

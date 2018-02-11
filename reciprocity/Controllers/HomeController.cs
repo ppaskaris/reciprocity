@@ -55,7 +55,6 @@ namespace reciprocity.Controllers
             return RedirectToAction("Index", "Book", key);
         }
 
-        [HttpGet]
         [Route("error/{statusCode?}")]
         public IActionResult Error(int? statusCode)
         {
