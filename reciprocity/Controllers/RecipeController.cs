@@ -128,8 +128,8 @@ namespace reciprocity.Controllers
         }
 
         [HttpGet]
-        [Route("ingredients")]
-        public async Task<IActionResult> EditIngredients(RecipeKeyModel key, bool addNew)
+        [Route("ingredients/add")]
+        public async Task<IActionResult> AddIngredients(RecipeKeyModel key)
         {
             var (book, recipe) = await GetRecipeAsync(key);
             if (recipe == null)
@@ -142,17 +142,67 @@ namespace reciprocity.Controllers
                 return BadRequest();
             }
 
+            var ingredients0 = await _dataService
+                .GetIngredientsAsync(recipe.BookId, recipe.RecipeId);
+            var ingredients = ingredients0.AsList();
+
+            var viewModels = ingredients
+                .Select(ingredient => new EditIngredientViewModel
+                {
+                    IngredientNo = ingredient.IngredientNo,
+                    Name = ingredient.Name,
+                    Quantity = ingredient.Quantity,
+                    QuantityUnit = $"{ingredient.QuantityType},{ingredient.QuantityUnit}",
+                    Serving = ingredient.Serving,
+                    ServingUnit = $"{ingredient.ServingType},{ingredient.ServingUnit}",
+                    CaloriesPerServing = ingredient.CaloriesPerServing
+                })
+                .ToList();
+
+            int lastIngredientNo =
+                ingredients.Count > 0 ? ingredients[0].IngredientNo : 0;
+            viewModels.Add(new EditIngredientViewModel
+            {
+                IngredientNo = lastIngredientNo + 1,
+                AutoFocus = true
+            });
+
             var units = await _dataService.GetUnitsAsync();
+
+            return View("EditIngredients", new EditIngredientsViewModel
+            {
+                Book = book,
+                Recipe = recipe,
+                Ingredients = viewModels,
+                Units = units,
+                IsAddingMode = true,
+                ShowBulkActions = false
+            });
+        }
+
+        [HttpGet]
+        [Route("ingredients/edit")]
+        public async Task<IActionResult> EditIngredients(RecipeKeyModel key)
+        {
+            var (book, recipe) = await GetRecipeAsync(key);
+            if (recipe == null)
+            {
+                return NotFound();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
             var ingredients0 = await _dataService
                 .GetIngredientsAsync(recipe.BookId, recipe.RecipeId);
             var ingredients = ingredients0.AsList();
 
             if (ingredients.Count <= 0)
             {
-                addNew = true;
+                return RedirectToAction("AddIngredients");
             }
-
-            var showBulkActions = !addNew;
 
             var viewModels = ingredients0
                 .Select(ingredient => new EditIngredientViewModel
@@ -167,30 +217,22 @@ namespace reciprocity.Controllers
                 })
                 .ToList();
 
-            if (addNew == true)
-            {
-                int lastIngredientNo = viewModels.LastOrDefault()?.IngredientNo ?? 0;
-                viewModels.Add(new EditIngredientViewModel
-                {
-                    IngredientNo = lastIngredientNo + 1,
-                    AutoFocus = true
-                });
-            }
+            var units = await _dataService.GetUnitsAsync();
 
-            return View(new EditIngredientsViewModel
+            return View("EditIngredients", new EditIngredientsViewModel
             {
                 Book = book,
                 Recipe = recipe,
                 Ingredients = viewModels,
                 Units = units,
-                AddNew = addNew,
-                ShowBulkActions = showBulkActions
+                IsAddingMode = false,
+                ShowBulkActions = true
             });
         }
 
         [HttpPost]
         [Route("ingredients")]
-        public async Task<IActionResult> EditIngredients(RecipeKeyModel key, EditIngredientsModel model)
+        public async Task<IActionResult> SaveIngredients(RecipeKeyModel key, EditIngredientsModel model)
         {
             var (book, recipe) = await GetRecipeAsync(key);
             if (recipe == null)
@@ -201,7 +243,7 @@ namespace reciprocity.Controllers
             if (!ModelState.IsValid)
             {
                 var units = await _dataService.GetUnitsAsync();
-                var showBulkActions = !model.AddNew;
+                var showBulkActions = !model.IsAddingMode;
                 var viewModels = model.Ingredients
                     .Select(ingredient => new EditIngredientViewModel
                     {
@@ -216,22 +258,23 @@ namespace reciprocity.Controllers
                     })
                     .ToList();
 
-                return View(new EditIngredientsViewModel
+                return View("EditIngredients", new EditIngredientsViewModel
                 {
                     Book = book,
                     Recipe = recipe,
                     Ingredients = viewModels,
                     Units = units,
-                    AddNew = model.AddNew,
+                    IsAddingMode = model.IsAddingMode,
                     ShowBulkActions = showBulkActions
                 });
             }
 
-            IEnumerable<EditIngredientModel> ingredients = model.Ingredients;
+            List<EditIngredientModel> ingredients = model.Ingredients;
             if (model.SaveAction == SaveActionType.RemoveChecked)
             {
                 ingredients = ingredients
-                    .Where(ingredient => ingredient.Checked == false);
+                    .Where(ingredient => ingredient.Checked == false)
+                    .ToList();
             }
 
             await _dataService
@@ -240,9 +283,16 @@ namespace reciprocity.Controllers
             switch (model.SaveAction)
             {
                 case SaveActionType.AddNew:
-                    return RedirectToAction("EditIngredients", new { AddNew = true });
+                    return RedirectToAction("AddIngredients");
                 case SaveActionType.RemoveChecked:
-                    return RedirectToAction("EditIngredients", new { AddNew = false });
+                    if (ingredients.Count > 0)
+                    {
+                        return RedirectToAction("EditIngredients");
+                    }
+                    else
+                    {
+                        return RedirectToAction("AddIngredients");
+                    }
                 default:
                     return RedirectToAction("Index");
             }

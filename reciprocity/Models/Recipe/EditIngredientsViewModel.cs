@@ -15,7 +15,7 @@ namespace reciprocity.Models.Recipe
         public List<EditIngredientViewModel> Ingredients { get; set; }
         public IEnumerable<SelectListItem> Units { get; set; }
 
-        public bool AddNew { get; set; }
+        public bool IsAddingMode { get; set; }
         public bool ShowBulkActions { get; set; }
     }
 }

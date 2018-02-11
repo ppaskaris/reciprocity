@@ -1,6 +1,6 @@
 ﻿@model reciprocity.Models.Recipe.EditIngredientsViewModel
 @{
-    ViewData["Title"] = Model.AddNew ? "Add Ingredients" : "Edit Ingredients";
+    ViewData["Title"] = Model.IsAddingMode ? "Add Ingredients" : "Edit Ingredients";
 }
 
 <ol class="breadcrumb">
@@ -11,7 +11,7 @@
 </ol>
 
 <h1>@ViewData["Title"]</h1>
-<form asp-action="EditIngredients">
+<form asp-action="SaveIngredients">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <table class="table table-hover" style="table-layout:fixed;">
         <colgroup>
@@ -30,7 +30,11 @@
             <tr>
                 @if (Model.ShowBulkActions)
                 {
-                    <th><span class="sr-only">bulk select</span></th>
+                    <th style="text-align:center;">
+                        <span class="glyphicon glyphicon-th-list"
+                              title="Bulk Select" aria-hidden="true"></span>
+                        <span class="sr-only">bulk select</span>
+                    </th>
                 }
                 <th>@Html.DisplayNameFor(model => model.Ingredients.First().Name)</th>
                 <th>@Html.DisplayNameFor(model => model.Ingredients.First().Quantity)</th>
@@ -51,15 +55,24 @@
             }
         </tbody>
     </table>
+    <input asp-for="IsAddingMode" type="hidden" />
     <div class="form-group">
-        <button type="submit" class="btn btn-primary"
-                name="SaveAction" value="AddNew">
-            Save and Add
-        </button>
-        <button type="submit" class="btn btn-default"
-                name="SaveAction" value="GoBack">
-            Save and Return
-        </button>
+        @if (Model.IsAddingMode)
+        {
+            <button type="submit" class="btn btn-primary"
+                    name="SaveAction" value="AddNew">
+                Save and Add
+            </button>
+            <a asp-action="Index" class="btn btn-default">Done</a>
+        }
+        else
+        {
+            <button type="submit" class="btn btn-primary"
+                    name="SaveAction" value="GoBack">
+                Save
+            </button>
+            <a asp-action="Index" class="btn btn-default">Cancel</a>
+        }
         @if (Model.ShowBulkActions)
         {
             <div class="btn-group">
@@ -82,7 +95,6 @@
                 Remove Selected
             </button>
         }
-        <a asp-action="Index" class="btn btn-default">Cancel</a>
     </div>
 </form>
 
