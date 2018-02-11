@@ -16,16 +16,18 @@ GO
 CREATE TABLE UnitType (
 	UnitTypeCode CHAR(1) NOT NULL,
 	[Name] NVARCHAR(100) NOT NULL,
+	SortOrder INT NOT NULL,
 
 	CONSTRAINT UnitType_PK
 		PRIMARY KEY (UnitTypeCode),
 );
 
 INSERT INTO UnitType
-	(UnitTypeCode, [Name])
+	(UnitTypeCode, [Name], SortOrder)
 VALUES
-	('m', 'Mass'),
-	('v', 'Volume');
+	('m', 'Mass', 1),
+	('v', 'Volume', 2),
+	('q', 'Quantity', 3);
 
 CREATE TABLE Unit (
 	UnitTypeCode CHAR(1) NOT NULL,
@@ -52,7 +54,10 @@ VALUES
 	('v', 'oz', 'fluid ounces', 'fl oz', 28.41306),
 	('v', 'cup', 'cups', 'C', 240),
 	('v', 'ml', 'milliliters', 'mL', 1),
-	('v', 'l', 'liter', 'L', 1000);
+	('v', 'l', 'liter', 'L', 1000),
+	('q', 'ea', 'each', 'ea', 1),
+	('q', 'pc', 'pieces', 'pc', 1),
+	('q', 'doz', 'dozen', 'doz', 12);
 
 
 CREATE TABLE Book (

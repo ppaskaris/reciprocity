@@ -256,12 +256,13 @@ namespace reciprocity.Services.Default
             const string queryText =
                 @"
                 SELECT UnitTypeCode, [Name]
-                FROM UnitType
-                ORDER BY [Name];
+                FROM UnitType;
 
-                SELECT UnitTypeCode, UnitCode, [Name]
+                SELECT Unit.UnitTypeCode, Unit.UnitCode, Unit.[Name]
                 FROM Unit
-                ORDER BY ConversionRatio, [Name] ASC;
+                INNER JOIN UnitType
+                    ON UnitType.UnitTypeCode = Unit.UnitTypeCode
+                ORDER BY UnitType.SortOrder, Unit.ConversionRatio, Unit.[Name];
                 ";
             using (var connection = GetConnection())
             using (var query = await connection.QueryMultipleAsync(queryText))
@@ -475,7 +476,7 @@ namespace reciprocity.Services.Default
             using (var query = await connection.QueryMultipleAsync(queryText, queryParams))
             {
                 var ingredients = await query.ReadAsync<IngredientViewModel>();
-                var caloriesPerServing = await query.ReadSingleAsync<int>();
+                var caloriesPerServing = await query.ReadFirstOrDefaultAsync<int>();
                 return (ingredients, caloriesPerServing);
             }
         }

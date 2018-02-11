@@ -37,7 +37,7 @@ else
         </colgroup>
         <thead>
             <tr>
-                <th>Quantity</th>
+                <th style="text-align:right;">Quantity</th>
                 <th>Unit</th>
                 <th>Name</th>
             </tr>
@@ -46,7 +46,7 @@ else
             @foreach (var ingredient in Model.Ingredients)
             {
                 <tr>
-                    <td class="text-right">@ingredient.Quantity</td>
+                    <td style="text-align:right">@ingredient.Quantity</td>
                     <td><abbr title="@ingredient.UnitName">@ingredient.UnitAbbreviation</abbr></td>
                     <td>@ingredient.Name</td>
                 </tr>
