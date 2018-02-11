@@ -21,15 +21,15 @@ namespace reciprocity.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(BookKeyModel key)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest();
-            }
-
             var book = await GetBookAsync(key);
             if (book == null)
             {
                 return NotFound();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
             }
 
             var viewModel = await _dataService.GetBookViewAsync(book.BookId);
@@ -40,15 +40,15 @@ namespace reciprocity.Controllers
         [Route("edit")]
         public async Task<IActionResult> Edit(BookKeyModel key)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest();
-            }
-
             var book = await GetBookAsync(key);
             if (book == null)
             {
                 return NotFound();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
             }
 
             return View(new EditBookModel
@@ -61,15 +61,15 @@ namespace reciprocity.Controllers
         [Route("edit")]
         public async Task<IActionResult> Edit(BookKeyModel key, EditBookModel model)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
             var book = await GetBookAsync(key);
             if (book == null)
             {
                 return NotFound();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
             }
 
             if (book.Name != model.Name)
@@ -84,15 +84,15 @@ namespace reciprocity.Controllers
         [Route("delete")]
         public async Task<IActionResult> Delete(BookKeyModel key)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest();
-            }
-
             var book = await GetBookAsync(key);
             if (book == null)
             {
                 return NotFound();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
             }
 
             return View(book);
@@ -102,15 +102,15 @@ namespace reciprocity.Controllers
         [Route("delete")]
         public async Task<IActionResult> Delete(BookKeyModel key, DeleteBookModel model)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
             var book = await GetBookAsync(key);
             if (book == null)
             {
                 return NotFound();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
             }
 
             await _dataService.DeleteBookAsync(book.BookId);
@@ -122,15 +122,15 @@ namespace reciprocity.Controllers
         [Route("add-recipe")]
         public async Task<IActionResult> AddRecipe(BookKeyModel key)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest();
-            }
-
             var book = await GetBookAsync(key);
             if (book == null)
             {
                 return NotFound();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
             }
 
             return View(new AddRecipeModel
@@ -143,15 +143,15 @@ namespace reciprocity.Controllers
         [Route("add-recipe")]
         public async Task<IActionResult> AddRecipe(BookKeyModel bookKey, AddRecipeModel model)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
             var book = await GetBookAsync(bookKey);
             if (book == null)
             {
                 return NotFound();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
             }
 
             var recipeKey = await _dataService.CreateRecipeAsync(book.BookId, model);
@@ -163,6 +163,10 @@ namespace reciprocity.Controllers
 
         private async Task<BookModel> GetBookAsync(BookKeyModel key)
         {
+            if (key == null || key.BookId == null || key.Token == null)
+            {
+                return null;
+            }
             var book = await _dataService.GetBookAsync(key.BookId.Value);
             if (book == null)
             {

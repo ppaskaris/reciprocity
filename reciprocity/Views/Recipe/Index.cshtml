@@ -7,7 +7,7 @@
 <ol class="breadcrumb">
     <li><a asp-action="Index" asp-controller="Home">Home</a></li>
     <li><a asp-action="Index" asp-controller="Book">@Model.Book.Name</a></li>
-    <li class="active">@Model.Recipe.Name</li>
+    <li class="active">@ViewData["Title"]</li>
 </ol>
 
 <h1>@ViewData["Title"]</h1>

@@ -1,0 +1,40 @@
+﻿@model reciprocity.Models.Recipe.EditIngredientViewModel
+
+<tr>
+    <td>
+        <label asp-for="IngredientNo" class="sr-only"></label>
+        <p class="form-control-static"><strong>@Model.IngredientNo</strong></p>
+        <input asp-for="IngredientNo" type="hidden" />
+        <span asp-validation-for="IngredientNo" class="text-danger"></span>
+    </td>
+    <td>
+        <label asp-for="Name" class="sr-only"></label>
+        <input asp-for="Name" class="form-control" autofocus=@Model.AutoFocus />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </td>
+    <td>
+        <label asp-for="Quantity" class="sr-only"></label>
+        <input asp-for="Quantity" class="form-control" style="text-align:right;" />
+        <span asp-validation-for="Quantity" class="text-danger"></span>
+    </td>
+    <td>
+        <label asp-for="QuantityUnit" class="sr-only"></label>
+        <select asp-for="QuantityUnit" asp-items="Model.Units" class="form-control"></select>
+        <span asp-validation-for="QuantityUnit" class="text-danger"></span>
+    </td>
+    <td>
+        <label asp-for="CaloriesPerServing" class="sr-only"></label>
+        <input asp-for="CaloriesPerServing" class="form-control" style="text-align:center;" />
+        <span asp-validation-for="CaloriesPerServing" class="text-danger"></span>
+    </td>
+    <td>
+        <label asp-for="Serving" class="sr-only"></label>
+        <input asp-for="Serving" class="form-control" style="text-align:right;" />
+        <span asp-validation-for="Serving" class="text-danger"></span>
+    </td>
+    <td>
+        <label asp-for="ServingUnit" class="sr-only"></label>
+        <select asp-for="ServingUnit" asp-items="Model.Units" class="form-control"></select>
+        <span asp-validation-for="ServingUnit" class="text-danger"></span>
+    </td>
+</tr>

@@ -5,7 +5,7 @@
 
 <ol class="breadcrumb">
     <li><a asp-action="Index" asp-controller="Home">Home</a></li>
-    <li>@Model.Book.Name</li>
+    <li>@ViewData["Title"]</li>
 </ol>
 
 <h1>@ViewData["Title"]</h1>
@@ -54,7 +54,7 @@ else
 <a class="btn btn-default" asp-action="Delete">Delete Recipe Book</a>
 
 @section Scripts {
-    <script type="text/javascript">
+    <script>
         $(document).ready(function () {
             $('.recipe-list').masonry({
                 itemSelector: '.recipe-list-item',

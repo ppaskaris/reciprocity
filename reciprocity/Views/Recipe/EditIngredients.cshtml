@@ -1,0 +1,57 @@
+﻿@model reciprocity.Models.Recipe.EditIngredientsViewModel
+@{
+    ViewData["Title"] = "Edit Ingredients";
+}
+
+<ol class="breadcrumb">
+    <li><a asp-action="Index" asp-controller="Home">Home</a></li>
+    <li><a asp-action="Index" asp-controller="Book">@Model.Book.Name</a></li>
+    <li><a asp-action="Index" asp-controller="Recipe">@Model.Recipe.Name</a></li>
+    <li class="active">@ViewData["Title"]</li>
+</ol>
+
+<h1>@ViewData["Title"]</h1>
+<p></p>
+<form asp-action="EditIngredients">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <table class="table table-hover" style="table-layout:fixed;">
+        <colgroup>
+            <col style="width:30px;">
+            <col>
+            <col style="width:100px;">
+            <col style="width:150px;">
+            <col style="width:100px;">
+            <col style="width:100px;">
+            <col style="width:150px;">
+        </colgroup>
+        <thead>
+            <tr>
+                <th>@Html.DisplayNameFor(model => model.Ingredients.First().IngredientNo)</th>
+                <th>@Html.DisplayNameFor(model => model.Ingredients.First().Name)</th>
+                <th>@Html.DisplayNameFor(model => model.Ingredients.First().Quantity)</th>
+                <th>@Html.DisplayNameFor(model => model.Ingredients.First().QuantityUnit)</th>
+                <th>@Html.DisplayNameFor(model => model.Ingredients.First().CaloriesPerServing)</th>
+                <th>@Html.DisplayNameFor(model => model.Ingredients.First().Serving)</th>
+                <th>@Html.DisplayNameFor(model => model.Ingredients.First().ServingUnit)</th>
+            </tr>
+        </thead>
+        <tbody class="js-AddIngredientContainer">
+            @for (var i = 0; i < Model.Ingredients.Count; ++i)
+            {
+                @Html.EditorFor(model => Model.Ingredients[i])
+            }
+        </tbody>
+    </table>
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary"
+                name="BonusAction" value="AddIngredient">
+            Save and Add Ingredient
+        </button>
+        <button type="submit" class="btn btn-default">Save Ingredients</button>
+        <a asp-action="Index" class="btn btn-default">Cancel</a>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

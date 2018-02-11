@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using reciprocity.Models.Book;
 using reciprocity.Models.Recipe;
 using reciprocity.Services;
@@ -20,17 +21,17 @@ namespace reciprocity.Controllers
         }
 
         [HttpGet]
-        async public Task<IActionResult> Index(RecipeKeyModel key)
+        public async Task<IActionResult> Index(RecipeKeyModel key)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest();
-            }
-
             var (book, recipe) = await GetRecipeAsync(key);
             if (recipe == null)
             {
                 return NotFound();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
             }
 
             return View(new RecipeViewModel
@@ -42,17 +43,17 @@ namespace reciprocity.Controllers
 
         [HttpGet]
         [Route("edit")]
-        async public Task<IActionResult> Edit(RecipeKeyModel key)
+        public async Task<IActionResult> Edit(RecipeKeyModel key)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest();
-            }
-
             var (book, recipe) = await GetRecipeAsync(key);
             if (recipe == null)
             {
                 return NotFound();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
             }
 
             return View(new EditRecipeModel
@@ -65,17 +66,17 @@ namespace reciprocity.Controllers
 
         [HttpPost]
         [Route("edit")]
-        async public Task<IActionResult> Edit(RecipeKeyModel key, EditRecipeModel model)
+        public async Task<IActionResult> Edit(RecipeKeyModel key, EditRecipeModel model)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
             var (book, recipe) = await GetRecipeAsync(key);
             if (recipe == null)
             {
                 return NotFound();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
             }
 
             await _dataService
@@ -86,17 +87,17 @@ namespace reciprocity.Controllers
 
         [HttpGet]
         [Route("delete")]
-        async public Task<IActionResult> Delete(RecipeKeyModel key)
+        public async Task<IActionResult> Delete(RecipeKeyModel key)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest();
-            }
-
             var (book, recipe) = await GetRecipeAsync(key);
             if (recipe == null)
             {
                 return NotFound();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
             }
 
             return View(recipe);
@@ -104,17 +105,17 @@ namespace reciprocity.Controllers
 
         [HttpPost]
         [Route("delete")]
-        async public Task<IActionResult> Delete(RecipeKeyModel key, DeleteRecipeModel model)
+        public async Task<IActionResult> Delete(RecipeKeyModel key, DeleteRecipeModel model)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
             var (book, recipe) = await GetRecipeAsync(key);
             if (recipe == null)
             {
                 return NotFound();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(recipe);
             }
 
             await _dataService.DeleteRecipeAsync(recipe.BookId, recipe.RecipeId);
@@ -122,10 +123,117 @@ namespace reciprocity.Controllers
             return RedirectToAction("Index", "Book");
         }
 
+        [HttpGet]
+        [Route("edit-ingredients")]
+        public async Task<IActionResult> EditIngredients(RecipeKeyModel key, EditIngredientsBonusActionType? bonusAction)
+        {
+            var (book, recipe) = await GetRecipeAsync(key);
+            if (recipe == null)
+            {
+                return NotFound();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
+            // TODO: Generate the view models in the data service guy.
+            var units = await _dataService.GetUnitsAsync();
+            var ingredients0 = await _dataService
+                .GetIngredientsAsync(recipe.BookId, recipe.RecipeId);
+
+            var ingredients = ingredients0
+                .Select(ingredient => new EditIngredientViewModel
+                {
+                    IngredientNo = ingredient.IngredientNo,
+                    Name = ingredient.Name,
+                    Quantity = ingredient.Quantity,
+                    QuantityUnit = $"{ingredient.QuantityType},{ingredient.QuantityUnit}",
+                    Serving = ingredient.Serving,
+                    ServingUnit = $"{ingredient.ServingType},{ingredient.ServingUnit}",
+                    CaloriesPerServing = ingredient.CaloriesPerServing,
+                    Units = units
+                })
+                .ToList();
+
+            if (ingredients.Count <= 0)
+            {
+                ingredients.Add(new EditIngredientViewModel
+                {
+                    IngredientNo = 1,
+                    AutoFocus = true,
+                    Units = units
+                });
+            }
+            else if (bonusAction == EditIngredientsBonusActionType.AddIngredient)
+            {
+                ingredients.Add(new EditIngredientViewModel
+                {
+                    IngredientNo = ingredients.Last().IngredientNo + 1,
+                    AutoFocus = true,
+                    Units = units
+                });
+            }
+
+            return View(new EditIngredientsViewModel
+            {
+                Book = book,
+                Recipe = recipe,
+                Ingredients = ingredients
+            });
+        }
+
+        [HttpPost]
+        [Route("edit-ingredients")]
+        public async Task<IActionResult> EditIngredients(RecipeKeyModel key, EditIngredientsModel model)
+        {
+            var (book, recipe) = await GetRecipeAsync(key);
+            if (recipe == null)
+            {
+                return NotFound();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                var units = await _dataService.GetUnitsAsync();
+                var ingredients = model.Ingredients
+                    .Select(ingredient => new EditIngredientViewModel
+                    {
+                        IngredientNo = ingredient.IngredientNo,
+                        Name = ingredient.Name,
+                        Quantity = ingredient.Quantity,
+                        QuantityUnit = ingredient.QuantityUnit,
+                        Serving = ingredient.Serving,
+                        ServingUnit = ingredient.ServingUnit,
+                        CaloriesPerServing = ingredient.CaloriesPerServing,
+                        Units = units
+                    })
+                    .ToList();
+
+                return View(new EditIngredientsViewModel
+                {
+                    Book = book,
+                    Recipe = recipe,
+                    Ingredients = ingredients
+                });
+            }
+
+            await _dataService
+                .SaveIngredientsAsync(recipe.BookId, recipe.RecipeId, model.Ingredients);
+
+            return RedirectToAction("EditIngredients", new { model.BonusAction });
+        }
+
+
         #region Helpers
 
         private async Task<(BookModel, RecipeModel)> GetRecipeAsync(RecipeKeyModel key)
         {
+            if (key == null || key.BookId == null || key.Token == null || key.RecipeId == null)
+            {
+                return default;
+            }
             var book = await _dataService.GetBookAsync(key.BookId.Value);
             if (book == null)
             {

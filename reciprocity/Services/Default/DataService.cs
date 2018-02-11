@@ -1,10 +1,13 @@
 ﻿using Dapper;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.SqlServer.Server;
 using reciprocity.Data;
 using reciprocity.Models.Book;
 using reciprocity.Models.Recipe;
 using reciprocity.SecurityTheatre;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
@@ -203,6 +206,204 @@ namespace reciprocity.Services.Default
                     WHERE BookId = @bookId AND RecipeId = @recipeId;
                     ",
                     new { bookId, recipeId });
+            }
+        }
+
+        #region GetUnitsAsync Helpers
+
+        private class UnitTypeDto
+        {
+            public string UnitTypeCode { get; set; }
+            public string Name { get; set; }
+        }
+
+        private class UnitDto
+        {
+            public string UnitTypeCode { get; set; }
+            public string UnitCode { get; set; }
+            public string Name { get; set; }
+        }
+
+        private static IEnumerable<SelectListItem> ToSelectListItems(
+            IEnumerable<UnitTypeDto> unitTypes,
+            IEnumerable<UnitDto> units)
+        {
+            var groups = unitTypes.ToDictionary(
+                unitType => unitType.UnitTypeCode,
+                unitType => new SelectListGroup { Name = unitType.Name });
+            return units.Select(unit => new SelectListItem
+            {
+                Group = groups[unit.UnitTypeCode],
+                Text = unit.Name,
+                Value = $"{unit.UnitTypeCode},{unit.UnitCode}"
+            });
+        }
+
+        #endregion
+
+        async Task<IEnumerable<SelectListItem>> IDataService.GetUnitsAsync()
+        {
+            const string queryText =
+                @"
+                SELECT UnitTypeCode, [Name]
+                FROM UnitType
+                ORDER BY [Name];
+
+                SELECT UnitTypeCode, UnitCode, [Name]
+                FROM Unit
+                ORDER BY Tier, [Name] ASC;
+                ";
+            using (var connection = GetConnection())
+            using (var query = await connection.QueryMultipleAsync(queryText))
+            {
+                var groups = await query.ReadAsync<UnitTypeDto>();
+                var units = await query.ReadAsync<UnitDto>();
+                return ToSelectListItems(groups, units);
+            }
+        }
+
+        async Task<IEnumerable<IngredientModel>> IDataService.GetIngredientsAsync(Guid bookId, Guid recipeId)
+        {
+            using (var connection = GetConnection())
+            {
+                return await connection.QueryAsync<IngredientModel>(
+                    @"
+                    SELECT
+                        BookId,
+                        RecipeId,
+                        IngredientNo,
+                        [Name],
+                        Quantity,
+                        QuantityType,
+                        QuantityUnit,
+                        Serving,
+                        ServingType,
+                        ServingUnit,
+                        CaloriesPerServing
+                    FROM BookRecipeIngredient
+                    WHERE BookId = @bookId AND RecipeId = @recipeId;
+                    ",
+                    new { bookId, recipeId });
+            }
+        }
+
+        private static readonly SqlMetaData[] BookRecipeIngredientMetaData =
+        {
+            new SqlMetaData("IngredientNo", SqlDbType.Int),
+            new SqlMetaData("Name", SqlDbType.NVarChar, 100),
+            new SqlMetaData("Quantity", SqlDbType.Decimal, 5, 2),
+            new SqlMetaData("QuantityType", SqlDbType.Char, 1),
+            new SqlMetaData("QuantityUnit", SqlDbType.VarChar, 3),
+            new SqlMetaData("Serving", SqlDbType.Decimal, 5, 2),
+            new SqlMetaData("ServingType", SqlDbType.Char, 1),
+            new SqlMetaData("ServingUnit", SqlDbType.VarChar, 3),
+            new SqlMetaData("CaloriesPerServing", SqlDbType.Decimal, 5, 2),
+        };
+
+        private class UnitKey
+        {
+            public string UnitTypeCode { get; set; }
+            public string UnitCode { get; set; }
+
+            public static UnitKey Parse(string typeAndCode)
+            {
+                // UnitTypeCode
+                //     ↓
+                //    "v,tsp"
+                //       ↑↑↑
+                //     UnitCode
+                return new UnitKey
+                {
+                    UnitTypeCode = typeAndCode.Substring(0, 1),
+                    UnitCode = typeAndCode.Substring(2)
+                };
+            }
+        }
+
+        private static SqlDataRecord CreateBookRecipeIngredientRecord(EditIngredientModel ingredient)
+        {
+            var dataRecord = new SqlDataRecord(BookRecipeIngredientMetaData);
+            dataRecord.SetInt32(0, ingredient.IngredientNo.Value);
+            dataRecord.SetString(1, ingredient.Name);
+            dataRecord.SetDecimal(2, ingredient.Quantity.Value);
+            var quantityUnit = UnitKey.Parse(ingredient.QuantityUnit);
+            dataRecord.SetString(3, quantityUnit.UnitTypeCode);
+            dataRecord.SetString(4, quantityUnit.UnitCode);
+            dataRecord.SetDecimal(5, ingredient.Serving.Value);
+            var servingUnit = UnitKey.Parse(ingredient.ServingUnit);
+            dataRecord.SetString(6, servingUnit.UnitTypeCode);
+            dataRecord.SetString(7, servingUnit.UnitCode);
+            dataRecord.SetDecimal(8, ingredient.CaloriesPerServing.Value);
+            return dataRecord;
+        }
+
+        async Task IDataService.SaveIngredientsAsync(Guid bookId, Guid recipeId, IEnumerable<EditIngredientModel> ingredients)
+        {
+            var now = DateTime.UtcNow;
+            var ingredientTable = ingredients
+                .Select(CreateBookRecipeIngredientRecord)
+                .AsTableValuedParameter("SaveBookRecipeIngredient");
+            using (var connection = GetConnection())
+            {
+                await connection.ExecuteAsync(
+                    @"
+                    MERGE INTO BookRecipeIngredient target
+                    USING @ingredientTable source
+                         ON target.BookId = @bookId
+                        AND target.RecipeId = @recipeId
+                        AND target.IngredientNo = source.IngredientNo
+                    WHEN MATCHED THEN
+                        UPDATE SET
+                            [Name] = source.[Name],
+                            Quantity = source.Quantity,
+                            QuantityType = source.QuantityType,
+                            QuantityUnit = source.QuantityUnit,
+                            Serving = source.Serving,
+                            ServingType = source.ServingType,
+                            ServingUnit = source.ServingUnit,
+                            CaloriesPerServing = source.CaloriesPerServing
+                    WHEN NOT MATCHED BY TARGET THEN
+                        INSERT (
+                            BookId,
+                            RecipeId,
+                            IngredientNo,
+                            [Name],
+                            Quantity,
+                            QuantityType,
+                            QuantityUnit,
+                            Serving,
+                            ServingType,
+                            ServingUnit,
+                            CaloriesPerServing
+                        ) VALUES (
+                            @bookId,
+                            @recipeId,
+                            source.IngredientNo,
+                            source.[Name],
+                            source.Quantity,
+                            source.QuantityType,
+                            source.QuantityUnit,
+                            source.Serving,
+                            source.ServingType,
+                            source.ServingUnit,
+                            source.CaloriesPerServing
+                        )
+                    WHEN NOT MATCHED BY SOURCE
+                        AND target.BookId = @bookId
+                        AND target.RecipeId = @recipeId THEN
+                            DELETE;
+
+                    UPDATE BookRecipe
+                    SET LastModifiedAt = @now
+                    WHERE BookId = @bookId AND RecipeId = @recipeId;
+                    ",
+                    new
+                    {
+                        bookId,
+                        recipeId,
+                        ingredientTable,
+                        now
+                    });
             }
         }
     }

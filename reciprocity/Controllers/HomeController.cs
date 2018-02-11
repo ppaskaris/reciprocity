@@ -59,9 +59,11 @@ namespace reciprocity.Controllers
         [Route("error/{statusCode?}")]
         public IActionResult Error(int? statusCode)
         {
+            int statusCode0 = statusCode ?? 500;
+            Response.StatusCode = statusCode0;
             return View(new ErrorViewModel
             {
-                StatusCode = statusCode ?? 500,
+                StatusCode = statusCode0,
                 RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
             });
         }

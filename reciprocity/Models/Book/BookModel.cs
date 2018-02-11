@@ -10,6 +10,7 @@ namespace reciprocity.Models.Book
     {
         public Guid BookId { get; set; }
         public BearerToken Token { get; set; }
+
         public string Name { get; set; }
     }
 }
