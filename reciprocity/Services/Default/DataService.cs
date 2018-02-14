@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.SqlServer.Server;
 using reciprocity.Data;
 using reciprocity.Models.Book;
+using reciprocity.Models.Home;
 using reciprocity.Models.Recipe;
 using reciprocity.SecurityTheatre;
 using System;
@@ -10,6 +11,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace reciprocity.Services.Default
@@ -305,13 +307,13 @@ namespace reciprocity.Services.Default
         {
             new SqlMetaData("IngredientNo", SqlDbType.Int),
             new SqlMetaData("Name", SqlDbType.NVarChar, 100),
-            new SqlMetaData("Quantity", SqlDbType.Decimal, 5, 2),
+            new SqlMetaData("Quantity", SqlDbType.Decimal, 7, 2),
             new SqlMetaData("QuantityType", SqlDbType.Char, 1),
             new SqlMetaData("QuantityUnit", SqlDbType.VarChar, 3),
-            new SqlMetaData("Serving", SqlDbType.Decimal, 5, 2),
+            new SqlMetaData("Serving", SqlDbType.Decimal, 7, 2),
             new SqlMetaData("ServingType", SqlDbType.Char, 1),
             new SqlMetaData("ServingUnit", SqlDbType.VarChar, 3),
-            new SqlMetaData("CaloriesPerServing", SqlDbType.Decimal, 5, 2),
+            new SqlMetaData("CaloriesPerServing", SqlDbType.Decimal, 7, 2),
         };
 
         private class UnitKey
@@ -478,6 +480,48 @@ namespace reciprocity.Services.Default
                 var ingredients = await query.ReadAsync<IngredientViewModel>();
                 var caloriesPerServing = await query.ReadFirstOrDefaultAsync<int>();
                 return (ingredients, caloriesPerServing);
+            }
+        }
+
+        #region GetSuggestionsAsync Helpers
+
+        // This is a very poor way of tokenizing words.
+        private static readonly Regex NonWordRegex =
+            new Regex(@"[a-z]+", RegexOptions.Compiled);
+
+        private string CreateSearchTerms(string query)
+        {
+            var words = from match in NonWordRegex.Matches(query)
+                        where !String.IsNullOrWhiteSpace(match.Value)
+                        select $"FORMSOF (INFLECTIONAL, \"{match.Value}\")";
+            return String.Join(" AND ", words);
+        }
+
+        #endregion
+
+        async Task<IEnumerable<SuggestionViewModel>> IDataService.GetSuggestionsAsync(string query)
+        {
+            var terms = CreateSearchTerms(query);
+            using (var connection = GetConnection())
+            {
+                return await connection.QueryAsync<SuggestionViewModel>(
+                    @"
+                    SELECT
+	                    CNF_FoodName.FoodDescription AS [Name],
+	                    CAST(CNF_NutrientAmount.NutrientValue AS DECIMAL(7, 2)) AS CaloriesPerServing
+                    FROM reciprocity.CNF_FoodName
+                    INNER JOIN CONTAINSTABLE(reciprocity.CNF_FoodName, FoodDescription, @terms, 15) AS SearchResult
+	                    ON SearchResult.[KEY] = CNF_FoodName.FoodId
+                    INNER JOIN reciprocity.CNF_NutrientAmount
+	                    ON CNF_NutrientAmount.FoodId = CNF_FoodName.FoodId
+                    INNER JOIN reciprocity.CNF_NutrientName
+	                    ON CNF_NutrientAmount.NutrientId = CNF_NutrientName.NutrientId
+                    WHERE CNF_NutrientName.NutrientSymbol = 'KCAL'
+                    ",
+                    new
+                    {
+                        terms
+                    });
             }
         }
     }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using reciprocity.Models.Book;
+using reciprocity.Models.Home;
 using reciprocity.Models.Recipe;
 using System;
 using System.Collections.Generic;
@@ -23,5 +24,6 @@ namespace reciprocity.Services
         Task<IEnumerable<IngredientModel>> GetIngredientsAsync(Guid bookId, Guid recipeId);
         Task SaveIngredientsAsync(Guid bookId, Guid recipeId, IEnumerable<EditIngredientModel> ingredients);
         Task<(IEnumerable<IngredientViewModel>, int)> GetRecipeViewComponentsAsync(Guid bookId, Guid recipeId);
+        Task<IEnumerable<SuggestionViewModel>> GetSuggestionsAsync(string query);
     }
 }

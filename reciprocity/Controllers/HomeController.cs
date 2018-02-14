@@ -66,5 +66,18 @@ namespace reciprocity.Controllers
                 RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
             });
         }
+
+        [HttpGet]
+        [Route("suggestions")]
+        public async Task<IActionResult> AutoSuggest(AutoSuggestModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return NoContent();
+            }
+
+            var suggestions = await _dataService.GetSuggestionsAsync(model.Query);
+            return View(suggestions);
+        }
     }
 }

@@ -1,0 +1,13 @@
+﻿@model IEnumerable<reciprocity.Models.Home.SuggestionViewModel>
+
+@{
+    Layout = null;
+}
+
+@foreach (var suggestion in Model)
+{
+    <option value="@suggestion.Name"
+            data-Serving="@suggestion.Serving"
+            data-ServingUnit="@suggestion.ServingUnit"
+            data-CaloriesPerServing="@suggestion.CaloriesPerServing"></option>
+}
