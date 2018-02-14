@@ -1,13 +1,9 @@
-﻿-------------------------------------------------------------------------------
--- UnitType
--------------------------------------------------------------------------------
-
-ALTER TABLE UnitType
+﻿ALTER TABLE reciprocity.UnitType
 	ADD SortOrder INT NULL;
 
 GO
 
-MERGE INTO UnitType target
+MERGE INTO reciprocity.UnitType target
 USING (
 	SELECT *
 	FROM (VALUES
@@ -33,26 +29,22 @@ WHEN NOT MATCHED BY SOURCE THEN
 
 GO
 
-ALTER TABLE UnitType
+ALTER TABLE reciprocity.UnitType
 	ALTER COLUMN SortOrder INT NOT NULL;
 
 GO
 
--------------------------------------------------------------------------------
--- Unit
--------------------------------------------------------------------------------
-
-ALTER TABLE Unit
+ALTER TABLE reciprocity.Unit
 	ALTER COLUMN Tier INT NULL;
 
 GO
 
-ALTER TABLE Unit
+ALTER TABLE reciprocity.Unit
 	ADD ConversionRatio DECIMAL(10, 6) NULL;
 
 GO
 
-MERGE INTO Unit target
+MERGE INTO reciprocity.Unit target
 USING (
 	SELECT *
 	FROM (VALUES
@@ -91,21 +83,12 @@ WHEN NOT MATCHED BY SOURCE THEN
 
 GO
 
-ALTER TABLE Unit
-	DROP COLUMN Tier;
-
-GO
-
-ALTER TABLE Unit
+ALTER TABLE reciprocity.Unit
 	ALTER COLUMN ConversionRatio DECIMAL(10, 6) NOT NULL;
 
 GO
 
--------------------------------------------------------------------------------
--- BookRecipeStatistics
--------------------------------------------------------------------------------
-
-CREATE VIEW BookRecipeStatistics AS
+CREATE VIEW reciprocity.BookRecipeStatistics AS
 SELECT
 	BookId,
 	RecipeId,
@@ -118,14 +101,14 @@ FROM (
 		BookRecipeIngredient.Quantity * QuantityUnit.ConversionRatio AS Quantity,
 		BookRecipeIngredient.Serving * ServingUnit.ConversionRatio AS Serving,
 		BookRecipeIngredient.CaloriesPerServing
-	FROM BookRecipe
-	INNER JOIN BookRecipeIngredient
+	FROM reciprocity.BookRecipe
+	INNER JOIN reciprocity.BookRecipeIngredient
         ON BookRecipeIngredient.BookId = BookRecipe.BookId
         AND BookRecipeIngredient.RecipeId = BookRecipe.RecipeId
-	INNER JOIN Unit QuantityUnit
+	INNER JOIN reciprocity.Unit QuantityUnit
 		ON QuantityUnit.UnitTypeCode = BookRecipeIngredient.QuantityType
 		AND QuantityUnit.UnitCode = BookRecipeIngredient.QuantityUnit
-	INNER JOIN Unit ServingUnit
+	INNER JOIN reciprocity.Unit ServingUnit
 		ON ServingUnit.UnitTypeCode = BookRecipeIngredient.ServingType
 		AND ServingUnit.UnitCode = BookRecipeIngredient.ServingUnit
 ) unused
