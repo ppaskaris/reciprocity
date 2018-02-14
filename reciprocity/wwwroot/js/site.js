@@ -61,7 +61,7 @@ function QueueAutoSuggest(event) {
     if (timeout >= 0) {
         clearTimeout(timeout);
     }
-    timeout = setTimeout(DoAutoSuggest, 50, $input);
+    timeout = setTimeout(DoAutoSuggest, 150, $input);
     $input.data('AutoSuggestTimeout', timeout);
 }
 
