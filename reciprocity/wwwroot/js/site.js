@@ -76,21 +76,17 @@ function AcceptAutoSuggest() {
     // If they selected a suggestion, be helpful and fill in the corresponding
     // serving form fields.
     var value = $input.val();
-    var didSelectOption = false;
     var $dataList = $('#' + $input.attr('list'));
     $dataList.find('option').each(function (_, option) {
         var $option = $(option);
-        if (didSelectOption = ($option.attr('value') === value)) {
+        var didSelectOption = $option.attr('value') === value;
+        if (didSelectOption) {
             $('#' + $input.attr('data-CaloriesPerServing')).val($option.attr('data-CaloriesPerServing'));
             $('#' + $input.attr('data-Serving')).val($option.attr('data-Serving'));
             $('#' + $input.attr('data-ServingUnit')).val($option.attr('data-ServingUnit'));
             return false;
         }
     });
-
-    if (didSelectOption) {
-        $dataList.empty();
-    }
 }
 
 function InitAutoSuggest() {

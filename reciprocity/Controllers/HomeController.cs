@@ -77,7 +77,11 @@ namespace reciprocity.Controllers
             }
 
             var suggestions = await _dataService.GetSuggestionsAsync(model.Query);
-            return View(suggestions);
+            return View(new AutoSuggestViewModel
+            {
+                Query = model.Query,
+                Suggestions = suggestions
+            });
         }
     }
 }
