@@ -1,6 +1,8 @@
 ﻿CREATE INDEX CNF_FoodName_FoodDescription
 	ON reciprocity.CNF_FoodName (FoodDescription);
 
+GO
+
 CREATE TABLE reciprocity.CNF_Unit (
 	MeasureId INT NOT NULL,
 	Serving DECIMAL(7,2) NOT NULL,
@@ -14,3 +16,5 @@ CREATE TABLE reciprocity.CNF_Unit (
 		FOREIGN KEY (ServingType, ServingCode)
 		REFERENCES reciprocity.Unit (UnitTypeCode, UnitCode),
 );
+
+GO
