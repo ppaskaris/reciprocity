@@ -1,16 +1,23 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
+using Dapper;
 using FastMember;
+using Humanizer;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace ImportCNF
 {
     class Program
     {
+        private const int CommandTimeout = 1200;
+
         private static Configuration CsvReaderConfiguration = new Configuration
         {
             PrepareHeaderForMatch = PrepareHeaderForMatch,
@@ -29,6 +36,7 @@ namespace ImportCNF
             Console.Error.WriteLine("Deleting existing data...");
             TruncateTable("reciprocity.CNF_NutrientAmount");
             TruncateTable("reciprocity.CNF_NutrientName");
+            TruncateTable("reciprocity.CNF_Unit");
             TruncateTable("reciprocity.CNF_ConversionFactor");
             TruncateTable("reciprocity.CNF_MeasureName");
             TruncateTable("reciprocity.CNF_FoodName");
@@ -67,6 +75,27 @@ namespace ImportCNF
             }
 
             Console.Error.WriteLine();
+            Console.Error.WriteLine("Removing unnecessary records...");
+            Console.Error.WriteLine("  Removing measures for \"100g\"");
+            Execute(
+                @"
+                DELETE
+                FROM reciprocity.CNF_ConversionFactor
+                WHERE CNF_ConversionFactor.MeasureId IN
+                    (SELECT MeasureId
+                     FROM reciprocity.CNF_MeasureName
+                     WHERE MeasureDescription = '100g');
+
+                DELETE
+                FROM reciprocity.CNF_MeasureName
+                WHERE MeasureDescription = '100g';
+                ");
+
+            Console.Error.WriteLine();
+            Console.Error.WriteLine("Populating \"CNF_Unit\"...");
+            PopulateUnitConversionTable();
+
+            Console.Error.WriteLine();
             Console.Error.WriteLine("Populating full-text search indexes...");
             PopulateFullTextIndex("reciprocity.CNF_FoodName");
 
@@ -76,31 +105,21 @@ namespace ImportCNF
 
             void TruncateTable(string tableName)
             {
-                var queryText = $"DELETE FROM {tableName};";
-                using (var connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    using (var command = new SqlCommand(queryText, connection))
-                    {
-                        Console.Error.WriteLine($"  Deleting from \"{tableName}\"");
-                        command.CommandTimeout = 300;
-                        command.ExecuteNonQuery();
-                    }
-                }
+                Console.Error.WriteLine($"  Deleting from \"{tableName}\"");
+                Execute($"DELETE FROM {tableName};");
             }
 
             void PopulateFullTextIndex(string tableName)
             {
-                var queryText = $"ALTER FULLTEXT INDEX ON {tableName} START FULL POPULATION;";
+                Console.Error.WriteLine($"  Populating full-text index on \"{tableName}\"");
+                Execute($"ALTER FULLTEXT INDEX ON {tableName} START FULL POPULATION;");
+            }
+
+            void Execute(string queryText)
+            {
                 using (var connection = new SqlConnection(connectionString))
                 {
-                    connection.Open();
-                    using (var command = new SqlCommand(queryText, connection))
-                    {
-                        Console.Error.WriteLine($"  Populating full-text index on \"{tableName}\"");
-                        command.CommandTimeout = 300;
-                        command.ExecuteNonQuery();
-                    }
+                    connection.Execute(queryText, commandTimeout: CommandTimeout);
                 }
             }
 
@@ -115,8 +134,32 @@ namespace ImportCNF
                     using (var bulkCopy = new SqlBulkCopy(connectionString))
                     {
                         Console.Error.WriteLine($"  Inserting into \"{tableName}\"");
-                        bulkCopy.BulkCopyTimeout = 600;
+                        bulkCopy.BulkCopyTimeout = CommandTimeout;
                         bulkCopy.DestinationTableName = tableName;
+                        bulkCopy.WriteToServer(dataReader);
+                    }
+                }
+            }
+
+            void PopulateUnitConversionTable()
+            {
+                using (var connection = new SqlConnection(connectionString))
+                {
+                    Console.Error.WriteLine("  Reading from \"reciprocity.CNF_MeasureName\"");
+                    var measures = connection.Query<MeasureNameRecord>(
+                        "SELECT MeasureId, MeasureDescription FROM reciprocity.CNF_MeasureName;");
+                    Console.Error.WriteLine("  Creating mapping \"reciprocity.CNF_MeasureName\" <-> \"reciprocity.CNF_Unit\"");
+                    var units = measures
+                        .SelectMany(CreateUnitRecords)
+                        .ToList();
+                    if (connection.State != ConnectionState.Open)
+                        connection.Open();
+                    using (var dataReader = ObjectReader.Create(units, UnitRecord.Members))
+                    using (var bulkCopy = new SqlBulkCopy(connection))
+                    {
+                        Console.Error.WriteLine("  Inserting into \"reciprocity.CNF_Unit\"");
+                        bulkCopy.BulkCopyTimeout = CommandTimeout;
+                        bulkCopy.DestinationTableName = "reciprocity.CNF_Unit";
                         bulkCopy.WriteToServer(dataReader);
                     }
                 }
@@ -188,6 +231,121 @@ namespace ImportCNF
                 "NutrientId",
                 "NutrientValue"
             };
+        }
+
+        class UnitRecord
+        {
+            public int MeasureId { get; set; }
+            public decimal Serving { get; set; }
+            public string ServingType { get; set; }
+            public string ServingCode { get; set; }
+            public string Parenthetical { get; set; }
+
+            public static string[] Members = {
+                "MeasureId",
+                "Serving",
+                "ServingType",
+                "ServingCode",
+                "Parenthetical"
+            };
+        }
+
+        private const RegexOptions RegexFlags =
+            RegexOptions.Compiled | RegexOptions.IgnoreCase;
+
+        private static readonly Regex UnitRegex =
+            new Regex(@"^(?<Serving>\d+) ?(?<Unit>g|ml)\b(?:,? (?<Parenthetical>.+))?", RegexFlags);
+
+        private static readonly Regex CountRegex =
+            new Regex(@"^(?<Serving>\d+) (?<Name>[a-z]{3,}[^\(]*)(?<Parenthetical>\([^)]+\))?", RegexFlags);
+
+        private static IEnumerable<UnitRecord> CreateUnitRecords(MeasureNameRecord measure)
+        {
+            Match match;
+
+            match = UnitRegex.Match(measure.MeasureDescription);
+            if (match.Success)
+            {
+                decimal serving = decimal.Parse(match.Groups["Serving"].Value);
+                string unit = match.Groups["Unit"].Value;
+                string parenthetical = ParseParenthetical(match.Groups["Parenthetical"]);
+                string unitTypeCode = null;
+                string unitCode = null;
+                switch (unit)
+                {
+                    case "g":
+                        unitTypeCode = "m";
+                        unitCode = "g";
+                        break;
+                    case "ml":
+                        unitTypeCode = "v";
+                        unitCode = "ml";
+                        break;
+                }
+                if (unitTypeCode != null && unitCode != null)
+                {
+                    yield return new UnitRecord
+                    {
+                        MeasureId = measure.MeasureId,
+                        Serving = serving,
+                        ServingType = unitTypeCode,
+                        ServingCode = unitCode,
+                        Parenthetical = parenthetical
+                    };
+                    yield break;
+                }
+            }
+
+            match = CountRegex.Match(measure.MeasureDescription);
+            if (match.Success)
+            {
+                decimal serving = decimal.Parse(match.Groups["Serving"].Value);
+                if (serving > 1)
+                {
+                    string name = match.Groups["Name"].Value.Trim();
+                    string parenthetical = ParseParenthetical(match.Groups["Parenthetical"]);
+                    yield return new UnitRecord
+                    {
+                        MeasureId = measure.MeasureId,
+                        Serving = serving,
+                        ServingType = "q",
+                        ServingCode = "pc",
+                        Parenthetical = FormatNameAndParenthetical(name, parenthetical)
+                    };
+                    yield break;
+                }
+            }
+
+            yield return new UnitRecord
+            {
+                MeasureId = measure.MeasureId,
+                Serving = 1.00m,
+                ServingType = "q",
+                ServingCode = "pc",
+                Parenthetical = measure.MeasureDescription
+            };
+
+            string FormatNameAndParenthetical(string name, string parenthetical)
+            {
+                string formatted = "1 " + name.Singularize(inputIsKnownToBePlural: false);
+                if (parenthetical != null)
+                {
+                    formatted += " " + parenthetical;
+                }
+                return formatted;
+            }
+        }
+
+        private static string ParseParenthetical(Group group)
+        {
+            if (group.Success && !string.IsNullOrWhiteSpace(group.Value))
+            {
+                return group.Value.Trim();
+            }
+            else
+            {
+                return null;
+            }
         }
 
         #endregion

@@ -20,10 +20,11 @@
         @{ string listId = Html.IdFor(model => model.Name) + "_Options"; }
         <input asp-for="Name"
                class="form-control @className js-AutoSuggest" list="@listId"
-               autocomplete="off" data-AutoSuggest="@Url.Action("AutoSuggest", "Home")"
-               data-CaloriesPerServing="@Html.IdFor(model => model.CaloriesPerServing)"
-               data-Serving="@Html.IdFor(model => model.Serving)"
-               data-ServingUnit="@Html.IdFor(model => model.ServingUnit)"/>
+               autocomplete="off" data-href="@Url.Action("AutoSuggest", "Home")"
+               data-quantity-unit="@Html.IdFor(model => model.QuantityUnit)"
+               data-calories-per-serving="@Html.IdFor(model => model.CaloriesPerServing)"
+               data-serving="@Html.IdFor(model => model.Serving)"
+               data-serving-unit="@Html.IdFor(model => model.ServingUnit)" />
         <datalist id="@listId"></datalist>
         <span asp-validation-for="Name" class="text-danger"></span>
     </td>

@@ -14,6 +14,7 @@ GO
 DROP TABLE IF EXISTS reciprocity.CNF_NutrientAmount;
 DROP TABLE IF EXISTS reciprocity.CNF_NutrientName;
 DROP TABLE IF EXISTS reciprocity.CNF_ConversionFactor;
+DROP TABLE IF EXISTS reciprocity.CNF_Unit;
 DROP TABLE IF EXISTS reciprocity.CNF_MeasureName;
 DROP TABLE IF EXISTS reciprocity.CNF_FoodName;
 
@@ -209,6 +210,8 @@ CREATE TABLE reciprocity.CNF_FoodName (
 	FoodId INT NOT NULL,
 	FoodDescription NVARCHAR(255) NOT NULL,
 
+	INDEX CNF_FoodName_FoodDescription (FoodDescription),
+
 	CONSTRAINT CNF_FoodName_PK
 		PRIMARY KEY (FoodId),
 );
@@ -219,6 +222,20 @@ CREATE TABLE reciprocity.CNF_MeasureName (
 
 	CONSTRAINT CNF_MeasureName_PK
 		PRIMARY KEY (MeasureId),
+);
+
+CREATE TABLE reciprocity.CNF_Unit (
+	MeasureId INT NOT NULL,
+	Serving DECIMAL(7,2) NOT NULL,
+	ServingType CHAR(1) NOT NULL,
+	ServingCode VARCHAR(3) NOT NULL,
+	Parenthetical NVARCHAR(127) NULL,
+
+	INDEX CNF_Unit_MeasureId (MeasureId),
+
+	CONSTRAINT Unit_CorrespondsTo_CNF_Unit
+		FOREIGN KEY (ServingType, ServingCode)
+		REFERENCES reciprocity.Unit (UnitTypeCode, UnitCode),
 );
 
 CREATE TABLE reciprocity.CNF_ConversionFactor (

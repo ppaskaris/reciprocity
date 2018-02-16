@@ -487,13 +487,13 @@ namespace reciprocity.Services.Default
 
         // This is a very poor way of tokenizing words.
         private static readonly Regex NonWordRegex =
-            new Regex(@"[a-z]+", RegexOptions.Compiled);
+            new Regex(@"[a-z]+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private string CreateSearchTerms(string query)
         {
             var words = from match in NonWordRegex.Matches(query)
                         where !String.IsNullOrWhiteSpace(match.Value)
-                        select $"FORMSOF (INFLECTIONAL, \"{match.Value}\")";
+                        select $"FORMSOF (INFLECTIONAL, {match.Value})";
             return String.Join(" AND ", words);
         }
 
@@ -504,24 +504,59 @@ namespace reciprocity.Services.Default
             var terms = CreateSearchTerms(query);
             using (var connection = GetConnection())
             {
-                return await connection.QueryAsync<SuggestionViewModel>(
+                var suggestions = await connection.QueryAsync<SuggestionModel>(
                     @"
                     SELECT
 	                    CNF_FoodName.FoodDescription AS [Name],
-	                    CAST(CNF_NutrientAmount.NutrientValue AS DECIMAL(7, 2)) AS CaloriesPerServing
+                        CNF_Unit.Serving,
+                        CNF_Unit.ServingType,
+                        CNF_Unit.ServingCode,
+	                    CAST((CNF_NutrientAmount.NutrientValue * CNF_ConversionFactor.ConversionFactorValue)
+                             AS DECIMAL(7, 2)) AS CaloriesPerServing,
+                        CNF_Unit.Parenthetical,
+                        Unit.Abbreviation AS UnitAbbreviation,
+                        CAST(1 AS BIT) AS IsTerminal
                     FROM reciprocity.CNF_FoodName
-                    INNER JOIN CONTAINSTABLE(reciprocity.CNF_FoodName, FoodDescription, @terms, 15) AS SearchResult
+                    INNER JOIN reciprocity.CNF_NutrientAmount
+	                    ON CNF_NutrientAmount.FoodId = CNF_FoodName.FoodId
+                    INNER JOIN reciprocity.CNF_NutrientName
+	                    ON CNF_NutrientAmount.NutrientId = CNF_NutrientName.NutrientId
+                    INNER JOIN reciprocity.CNF_ConversionFactor
+                        ON CNF_ConversionFactor.FoodId = CNF_FoodName.FoodId
+                    INNER JOIN reciprocity.CNF_Unit
+                        ON CNF_Unit.MeasureId = CNF_ConversionFactor.MeasureId
+                    INNER JOIN reciprocity.Unit
+                        ON Unit.UnitTypeCode = CNF_Unit.ServingType
+                        AND Unit.UnitCode = CNF_Unit.ServingCode
+                    WHERE CNF_FoodName.FoodDescription = @query
+                        AND CNF_NutrientName.NutrientSymbol = 'KCAL'
+
+                    UNION ALL
+
+                    SELECT
+	                    CNF_FoodName.FoodDescription AS [Name],
+                        100.00 AS Serving,
+                        'm' AS ServingType,
+                        'g' AS ServingCode,
+	                    CAST(CNF_NutrientAmount.NutrientValue AS DECIMAL(7, 2)) AS CaloriesPerServing,
+                        NULL AS Paranthetical,
+                        NULL AS UnitAbbreviation,
+                        CAST(0 AS BIT) AS IsTerminal
+                    FROM reciprocity.CNF_FoodName
+                    INNER JOIN CONTAINSTABLE(reciprocity.CNF_FoodName, FoodDescription, @terms, 25) AS SearchResult
 	                    ON SearchResult.[KEY] = CNF_FoodName.FoodId
                     INNER JOIN reciprocity.CNF_NutrientAmount
 	                    ON CNF_NutrientAmount.FoodId = CNF_FoodName.FoodId
                     INNER JOIN reciprocity.CNF_NutrientName
 	                    ON CNF_NutrientAmount.NutrientId = CNF_NutrientName.NutrientId
-                    WHERE CNF_NutrientName.NutrientSymbol = 'KCAL'
+                    WHERE CNF_NutrientName.NutrientSymbol = 'KCAL';
                     ",
                     new
                     {
+                        query,
                         terms
                     });
+                return suggestions.Select(SuggestionViewModel.Create);
             }
         }
     }

@@ -14,27 +14,20 @@ function DoAutoFocus() {
     $('.js-AutoFocus').first().focus();
 }
 
-function DoAutoSuggest($input) {
+function DoAutoSuggest($input, query) {
     $input.removeData('AutoSuggestTimeout');
-
-    // Version fixes concurrency issues where requests interleave with high
-    // latency.We mark ourselves as the "current version" and abort if someone
-    // else has claimed that title by the time our callback resolves.
-    var myVersion = $input.data('AutoSuggestVersion');
-    if (myVersion == null) myVersion = 0;
-    $input.data('AutoSuggestVersion', myVersion += 1);
 
     var $dataList = $('#' + $input.attr('list'));
     $.ajax({
         method: 'GET',
-        url: $input.attr('data-AutoSuggest'),
+        url: $input.attr('data-href'),
         data: {
-            Query: $input.val()
+            Query: query
         },
         dataType: 'html',
         success: function (fragment) {
-            var version = $input.data('AutoSuggestVersion');
-            if (version !== myVersion) return;
+            var lastQuery = $input.data('AutoSuggestLastQuery');
+            if (lastQuery !== query) return;
             if (fragment != null) {
                 $dataList.html(fragment);
             } else {
@@ -42,55 +35,60 @@ function DoAutoSuggest($input) {
             }
         },
         failure: function () {
-            var version = $input.data('AutoSuggestVersion');
-            if (version !== myVersion) return;
+            var lastQuery = $input.data('AutoSuggestLastQuery');
+            if (lastQuery !== query) return;
+            $input.data('AutoSuggestVersion', 0);
             $dataList.empty();
         }
     });
 }
 
-function QueueAutoSuggest(event) {
-    // Only alphabet characters should trigger auto-complete.
-    if (event.keyCode < 65 || event.keyCode > 90) {
-        return;
+function AbortAutoSuggest($input) {
+    var timeout = $input.data('AutoSuggestTimeout');
+    if (timeout != null) {
+        clearTimeout(timeout);
+        $input.removeData('AutoSuggestTimeout')
     }
+}
 
+function QueueAutoSuggest(event) {
     // Debounce so as to not send *so* many requests.
     var $input = $(this);
-    var timeout = $input.data('AutoSuggestTimeout');
-    if (timeout >= 0) {
-        clearTimeout(timeout);
+    var query = $input.val();
+    var lastQuery = $input.data('AutoSuggestLastQuery');
+    if (query !== lastQuery) {
+        AbortAutoSuggest($input);
+        var timeout = setTimeout(DoAutoSuggest, 250, $input, query);
+        $input.data('AutoSuggestTimeout', timeout);
+        $input.data('AutoSuggestLastQuery', query)
     }
-    timeout = setTimeout(DoAutoSuggest, 150, $input);
-    $input.data('AutoSuggestTimeout', timeout);
 }
 
 function AcceptAutoSuggest() {
-    var $input = $(this);
-    var timeout = $input.data('AutoSuggestTimeout');
-    if (timeout >= 0) {
-        clearTimeout(timeout);
-        $input.removeData('AutoSuggestTimeout');
-    }
-
     // If they selected a suggestion, be helpful and fill in the corresponding
     // serving form fields.
+    var $input = $(this);
     var value = $input.val();
     var $dataList = $('#' + $input.attr('list'));
     $dataList.find('option').each(function (_, option) {
         var $option = $(option);
         var didSelectOption = $option.attr('value') === value;
         if (didSelectOption) {
-            $('#' + $input.attr('data-CaloriesPerServing')).val($option.attr('data-CaloriesPerServing'));
-            $('#' + $input.attr('data-Serving')).val($option.attr('data-Serving'));
-            $('#' + $input.attr('data-ServingUnit')).val($option.attr('data-ServingUnit'));
+            $input.val($option.attr('data-value'));
+            $('#' + $input.attr('data-quantity-unit')).val($option.attr('data-serving-unit'));
+            $('#' + $input.attr('data-calories-per-serving')).val($option.attr('data-calories-per-serving'));
+            $('#' + $input.attr('data-serving')).val($option.attr('data-serving'));
+            $('#' + $input.attr('data-serving-unit')).val($option.attr('data-serving-unit'));
+            if ($option.attr('data-is-terminal') === "True") {
+                AbortAutoSuggest($input);
+            }
             return false;
         }
     });
 }
 
 function InitAutoSuggest() {
-    $(document).on('keyup', '.js-AutoSuggest', QueueAutoSuggest);
+    $(document).on('keyup input', '.js-AutoSuggest', QueueAutoSuggest);
     $(document).on('input', '.js-AutoSuggest', AcceptAutoSuggest);
 }
 

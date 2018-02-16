@@ -4,12 +4,16 @@
     Layout = null;
 }
 
+@{ int index = 0; }
 @foreach (var suggestion in Model.Suggestions)
 {
-    <option value="@suggestion.Name"
-            data-Serving="@suggestion.Serving"
-            data-ServingUnit="@suggestion.ServingUnit"
-            data-CaloriesPerServing="@suggestion.CaloriesPerServing">
-        @Model.Query - @suggestion.Name
-    </option>
+    index += 1;
+    bool isExactPrefix = suggestion.Name.StartsWith(Model.Query, StringComparison.Ordinal);
+    string label = isExactPrefix ? suggestion.Name : $"{Model.Query} - {@suggestion.Name}";
+    <option value="@suggestion.Value :: @index" label="@label"
+            data-value="@suggestion.Value"
+            data-is-terminal="@suggestion.IsTerminal"
+            data-serving="@suggestion.Serving"
+            data-serving-unit="@suggestion.ServingUnit"
+            data-calories-per-serving="@suggestion.CaloriesPerServing"></option>
 }
