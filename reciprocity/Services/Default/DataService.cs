@@ -491,9 +491,12 @@ namespace reciprocity.Services.Default
 
         private string CreateSearchTerms(string query)
         {
+            // TODO: Add ", FORMSOF (THESAURUS, \"{word}\") WEIGHT (0.25)"
+            // when SQL Azure enables the THESAURUS in FTS.
             var words = from match in NonWordRegex.Matches(query)
-                        where !String.IsNullOrWhiteSpace(match.Value)
-                        select $"FORMSOF (INFLECTIONAL, {match.Value})";
+                        let word = match.Value
+                        where !String.IsNullOrWhiteSpace(word)
+                        select $"ISABOUT (\"{word}\" WEIGHT (1), FORMSOF (INFLECTIONAL, \"{word}\") WEIGHT (0.75))";
             return String.Join(" AND ", words);
         }
 
@@ -507,6 +510,7 @@ namespace reciprocity.Services.Default
                 var suggestions = await connection.QueryAsync<SuggestionModel>(
                     @"
                     SELECT
+                        1000 AS [RANK],
                         CNF_FoodName.FoodDescription AS [Name],
                         CNF_Unit.Serving,
                         CNF_Unit.ServingType,
@@ -534,6 +538,7 @@ namespace reciprocity.Services.Default
                     UNION ALL
 
                     SELECT
+                        SearchResult.[RANK],
                         CNF_FoodName.FoodDescription AS [Name],
                         100.00 AS Serving,
                         'm' AS ServingType,
@@ -549,7 +554,9 @@ namespace reciprocity.Services.Default
                         ON CNF_NutrientAmount.FoodId = CNF_FoodName.FoodId
                     INNER JOIN reciprocity.CNF_NutrientName
                         ON CNF_NutrientAmount.NutrientId = CNF_NutrientName.NutrientId
-                    WHERE CNF_NutrientName.NutrientSymbol = 'KCAL';
+                    WHERE CNF_NutrientName.NutrientSymbol = 'KCAL'
+
+                    ORDER BY [RANK] DESC, [Name];
                     ",
                     new
                     {
