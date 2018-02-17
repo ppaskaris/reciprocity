@@ -21,6 +21,14 @@
     white-space: pre-line;
 }
 
+/* Home/About */
+
+.footnotes {
+    margin-top: 5rem;
+    padding-left: 1rem;
+    text-indent: -0.75rem;
+}
+
 /* Book/Index */
 .recipe-list {
     margin: -2px 0;
