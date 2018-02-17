@@ -9,7 +9,7 @@ namespace reciprocity.Models.Home
     public class AutoSuggestModel
     {
         [Required]
-        [MinLength(2)]
+        [MinLength(3)]
         public string Query { get; set; }
     }
 }

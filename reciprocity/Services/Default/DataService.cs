@@ -487,7 +487,7 @@ namespace reciprocity.Services.Default
 
         // This is a very poor way of tokenizing words.
         private static readonly Regex NonWordRegex =
-            new Regex(@"[a-z]+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            new Regex(@"[a-z0-9]+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private string CreateSearchTerms(string query)
         {
@@ -507,6 +507,10 @@ namespace reciprocity.Services.Default
             var terms = CreateSearchTerms(query);
             using (var connection = GetConnection())
             {
+                // TODO: Strip parentheticals from query.
+                // TODO: Separate measurement query from search query.
+                // TODO: Include "100g" measurement in measurement query.
+                // TODO: Set "category" from here.
                 var suggestions = await connection.QueryAsync<SuggestionModel>(
                     @"
                     SELECT

@@ -58,6 +58,7 @@ else
 </p>
 
 @section Scripts {
+    @{await Html.RenderPartialAsync("_MasonryScriptsPartial");}
     <script>
         $(document).ready(function () {
             $('.recipe-list').masonry({

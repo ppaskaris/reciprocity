@@ -13,6 +13,7 @@ namespace reciprocity.Models.Home
         public string ServingUnit { get; set; }
         public decimal CaloriesPerServing { get; set; }
         public bool IsTerminal { get; set; }
+        public string Category { get; set; }
 
         public static SuggestionViewModel Create(SuggestionModel suggestion)
         {
@@ -22,12 +23,12 @@ namespace reciprocity.Models.Home
                 if (suggestion.ServingType == "v")
                 {
                     name = $"{suggestion.Name} ({suggestion.Serving} {suggestion.UnitAbbreviation}, {suggestion.Parenthetical})";
-                    value = $"{suggestion.Name} ({suggestion.Parenthetical})";
                 }
                 else
                 {
-                    name = value = $"{suggestion.Name} ({suggestion.Parenthetical})";
+                    name = $"{suggestion.Name} ({suggestion.Parenthetical})";
                 }
+                value = $"{suggestion.Name} ({suggestion.Parenthetical})";
             }
             else if (suggestion.UnitAbbreviation != null)
             {
@@ -45,7 +46,8 @@ namespace reciprocity.Models.Home
                 CaloriesPerServing = suggestion.CaloriesPerServing,
                 Serving = suggestion.Serving,
                 ServingUnit = $"{suggestion.ServingType},{suggestion.ServingCode}",
-                IsTerminal = suggestion.IsTerminal
+                IsTerminal = suggestion.IsTerminal,
+                Category = suggestion.IsTerminal ? "Weights & Measures" : "Suggestions"
             };
         }
     }

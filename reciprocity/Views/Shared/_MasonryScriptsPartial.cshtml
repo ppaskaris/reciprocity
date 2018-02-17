@@ -1,0 +1,12 @@
+﻿<environment include="Development">
+    <script src="~/lib/masonry/masonry.pkgd.js"></script>
+</environment>
+<environment exclude="Development">
+    <script src="https://unpkg.com/masonry-layout@4.2.1/dist/masonry.pkgd.min.js"
+            asp-fallback-src="~/lib/masonry/masonry.pkgd.min.js"
+            asp-fallback-test="window.Masonry"
+            crossorigin="anonymous"
+            integrity="sha384-yw7soowW0iv52ojeRvv6i2kl6A4AI2yR4tXvV1Vo44lZVLAVc8i7Hd536sUq76JB"
+            referrerpolicy="no-referrer">
+    </script>
+</environment>
