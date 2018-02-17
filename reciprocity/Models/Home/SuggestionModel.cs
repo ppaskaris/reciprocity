@@ -14,6 +14,6 @@ namespace reciprocity.Models.Home
         public string UnitAbbreviation { get; set; }
         public decimal CaloriesPerServing { get; set; }
         public string Parenthetical { get; set; }
-        public bool IsTerminal { get; set; }
+        public string SuggestionTypeCode { get; set; }
     }
 }

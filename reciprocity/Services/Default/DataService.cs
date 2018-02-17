@@ -485,14 +485,57 @@ namespace reciprocity.Services.Default
 
         #region GetSuggestionsAsync Helpers
 
+        private string StripParenthetical(string value)
+        {
+            int stack = 0;
+            bool flag = false;
+            for (int i = value.Length - 1; i >= 0; --i)
+            {
+                char ch = value[i];
+                if (ch == ')')
+                {
+                    ++stack;
+                    flag = true;
+                }
+                else if (ch == '(')
+                {
+                    if (stack > 0)
+                    {
+                        --stack;
+                    }
+                    else
+                    {
+                        flag = true;
+                    }
+                }
+                if (flag && stack == 0)
+                {
+                    return value.Substring(0, i);
+                }
+            }
+            if (stack > 0)
+            {
+                return string.Empty;
+            }
+            else
+            {
+                return value;
+            }
+        }
+
+        private string SanitizeSearchQuery(string query)
+        {
+            return StripParenthetical(query).Trim();
+        }
+
         // This is a very poor way of tokenizing words.
         private static readonly Regex NonWordRegex =
             new Regex(@"[a-z0-9]+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private string CreateSearchTerms(string query)
         {
-            // TODO: Add ", FORMSOF (THESAURUS, \"{word}\") WEIGHT (0.25)"
-            // when SQL Azure enables the THESAURUS in FTS.
+            // TODO: Add ", FORMSOF (THESAURUS, \"{word}\") WEIGHT (0.25)" when
+            // SQL Azure enables the THESAURUS in FTS.
             var words = from match in NonWordRegex.Matches(query)
                         let word = match.Value
                         where !String.IsNullOrWhiteSpace(word)
@@ -502,72 +545,106 @@ namespace reciprocity.Services.Default
 
         #endregion
 
-        async Task<IEnumerable<SuggestionViewModel>> IDataService.GetSuggestionsAsync(string query)
+        async Task<IEnumerable<SuggestionViewModel>> IDataService.GetSuggestionsAsync(string rawQuery)
         {
-            var terms = CreateSearchTerms(query);
-            using (var connection = GetConnection())
+            var searchQuery = SanitizeSearchQuery(rawQuery);
+            if (searchQuery.Length <= 0)
             {
-                // TODO: Strip parentheticals from query.
-                // TODO: Separate measurement query from search query.
-                // TODO: Include "100g" measurement in measurement query.
-                // TODO: Set "category" from here.
-                var suggestions = await connection.QueryAsync<SuggestionModel>(
-                    @"
-                    SELECT
-                        1000 AS [RANK],
-                        CNF_FoodName.FoodDescription AS [Name],
-                        CNF_Unit.Serving,
-                        CNF_Unit.ServingType,
-                        CNF_Unit.ServingCode,
-                        CAST((CNF_NutrientAmount.NutrientValue * CNF_ConversionFactor.ConversionFactorValue)
-                             AS DECIMAL(7, 2)) AS CaloriesPerServing,
-                        CNF_Unit.Parenthetical,
-                        Unit.Abbreviation AS UnitAbbreviation,
-                        CAST(1 AS BIT) AS IsTerminal
-                    FROM reciprocity.CNF_FoodName
-                    INNER JOIN reciprocity.CNF_NutrientAmount
-                        ON CNF_NutrientAmount.FoodId = CNF_FoodName.FoodId
-                    INNER JOIN reciprocity.CNF_NutrientName
-                        ON CNF_NutrientAmount.NutrientId = CNF_NutrientName.NutrientId
-                    INNER JOIN reciprocity.CNF_ConversionFactor
-                        ON CNF_ConversionFactor.FoodId = CNF_FoodName.FoodId
-                    INNER JOIN reciprocity.CNF_Unit
-                        ON CNF_Unit.MeasureId = CNF_ConversionFactor.MeasureId
-                    INNER JOIN reciprocity.Unit
-                        ON Unit.UnitTypeCode = CNF_Unit.ServingType
-                        AND Unit.UnitCode = CNF_Unit.ServingCode
-                    WHERE CNF_FoodName.FoodDescription = @query
-                        AND CNF_NutrientName.NutrientSymbol = 'KCAL'
+                return Enumerable.Empty<SuggestionViewModel>();
+            }
+            var searchTerms = CreateSearchTerms(searchQuery);
+            if (searchTerms.Length <= 0)
+            {
+                return Enumerable.Empty<SuggestionViewModel>();
+            }
+            const string queryText =
+                @"
+                SELECT
+                    CNF_FoodName.FoodDescription AS [Name],
+                    100.00 AS Serving,
+                    Unit.UnitTypeCode AS ServingType,
+                    Unit.UnitCode AS ServingCode,
+                    CAST(CNF_NutrientAmount.NutrientValue AS DECIMAL(7, 2)) AS CaloriesPerServing,
+                    NULL AS Parenthetical,
+                    Unit.Abbreviation AS UnitAbbreviation,
+                    'm' as SuggestionTypeCode,
+                    UnitType.SortOrder AS SortOrder1,
+                    Unit.ConversionRatio AS SortOrder2,
+                    Unit.[Name] AS SortOrder3
+                FROM reciprocity.CNF_FoodName
+                INNER JOIN reciprocity.CNF_NutrientAmount
+                    ON CNF_NutrientAmount.FoodId = CNF_FoodName.FoodId
+                INNER JOIN reciprocity.CNF_NutrientName
+                    ON CNF_NutrientAmount.NutrientId = CNF_NutrientName.NutrientId
+                INNER JOIN reciprocity.Unit
+                    ON Unit.UnitTypeCode = 'm'
+                    AND Unit.UnitCode = 'g'
+                INNER JOIN reciprocity.UnitType
+                    ON UnitType.UnitTypeCode = Unit.UnitTypeCode
+                WHERE CNF_FoodName.FoodDescription = @searchQuery
+                    AND CNF_NutrientName.NutrientSymbol = 'KCAL'
+                UNION
+                SELECT
+                    CNF_FoodName.FoodDescription AS [Name],
+                    CNF_Unit.Serving AS Serving,
+                    CNF_Unit.ServingType AS ServingType,
+                    CNF_Unit.ServingCode AS ServingCode,
+                    CAST((CNF_NutrientAmount.NutrientValue * CNF_ConversionFactor.ConversionFactorValue)
+                            AS DECIMAL(7, 2)) AS CaloriesPerServing,
+                    CNF_Unit.Parenthetical,
+                    Unit.Abbreviation AS UnitAbbreviation,
+                    'm' as SuggestionCode,
+                    UnitType.SortOrder AS SortOrder1,
+                    Unit.ConversionRatio AS SortOrder2,
+                    Unit.[Name] AS SortOrder3
+                FROM reciprocity.CNF_FoodName
+                INNER JOIN reciprocity.CNF_NutrientAmount
+                    ON CNF_NutrientAmount.FoodId = CNF_FoodName.FoodId
+                INNER JOIN reciprocity.CNF_NutrientName
+                    ON CNF_NutrientAmount.NutrientId = CNF_NutrientName.NutrientId
+                INNER JOIN reciprocity.CNF_ConversionFactor
+                    ON CNF_ConversionFactor.FoodId = CNF_FoodName.FoodId
+                INNER JOIN reciprocity.CNF_Unit
+                    ON CNF_Unit.MeasureId = CNF_ConversionFactor.MeasureId
+                INNER JOIN reciprocity.Unit
+                    ON Unit.UnitTypeCode = CNF_Unit.ServingType
+                    AND Unit.UnitCode = CNF_Unit.ServingCode
+                INNER JOIN reciprocity.UnitType
+                    ON UnitType.UnitTypeCode = Unit.UnitTypeCode
+                WHERE CNF_FoodName.FoodDescription = @searchQuery
+                    AND CNF_NutrientName.NutrientSymbol = 'KCAL'
+                ORDER BY SortOrder1, SortOrder2, SortOrder3;
 
-                    UNION ALL
-
-                    SELECT
-                        SearchResult.[RANK],
-                        CNF_FoodName.FoodDescription AS [Name],
-                        100.00 AS Serving,
-                        'm' AS ServingType,
-                        'g' AS ServingCode,
-                        CAST(CNF_NutrientAmount.NutrientValue AS DECIMAL(7, 2)) AS CaloriesPerServing,
-                        NULL AS Paranthetical,
-                        NULL AS UnitAbbreviation,
-                        CAST(0 AS BIT) AS IsTerminal
-                    FROM reciprocity.CNF_FoodName
-                    INNER JOIN CONTAINSTABLE(reciprocity.CNF_FoodName, FoodDescription, @terms, 25) AS SearchResult
-                        ON SearchResult.[KEY] = CNF_FoodName.FoodId
-                    INNER JOIN reciprocity.CNF_NutrientAmount
-                        ON CNF_NutrientAmount.FoodId = CNF_FoodName.FoodId
-                    INNER JOIN reciprocity.CNF_NutrientName
-                        ON CNF_NutrientAmount.NutrientId = CNF_NutrientName.NutrientId
-                    WHERE CNF_NutrientName.NutrientSymbol = 'KCAL'
-
-                    ORDER BY [RANK] DESC, [Name];
-                    ",
-                    new
-                    {
-                        query,
-                        terms
-                    });
-                return suggestions.Select(SuggestionViewModel.Create);
+                SELECT
+                    CNF_FoodName.FoodDescription AS [Name],
+                    100.00 AS Serving,
+                    'm' AS ServingType,
+                    'g' AS ServingCode,
+                    CAST(CNF_NutrientAmount.NutrientValue AS DECIMAL(7, 2)) AS CaloriesPerServing,
+                    'i' as SuggestionTypeCode
+                FROM reciprocity.CNF_FoodName
+                INNER JOIN CONTAINSTABLE(reciprocity.CNF_FoodName, FoodDescription, @searchTerms, 25) AS SearchResult
+                    ON SearchResult.[KEY] = CNF_FoodName.FoodId
+                INNER JOIN reciprocity.CNF_NutrientAmount
+                    ON CNF_NutrientAmount.FoodId = CNF_FoodName.FoodId
+                INNER JOIN reciprocity.CNF_NutrientName
+                    ON CNF_NutrientAmount.NutrientId = CNF_NutrientName.NutrientId
+                WHERE CNF_FoodName.FoodDescription <> @searchQuery
+                    AND CNF_NutrientName.NutrientSymbol = 'KCAL'
+                ORDER BY SearchResult.[RANK] DESC, CNF_FoodName.FoodDescription;
+                ";
+            var queryParams = new
+            {
+                searchQuery,
+                searchTerms
+            };
+            using (var connection = GetConnection())
+            using (var query = await connection.QueryMultipleAsync(queryText, queryParams))
+            {
+                var measurements = query.Read<SuggestionModel>();
+                var ingredients = query.Read<SuggestionModel>();
+                return measurements.Concat(ingredients)
+                    .Select(SuggestionViewModel.Create);
             }
         }
     }

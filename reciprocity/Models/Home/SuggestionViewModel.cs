@@ -17,18 +17,19 @@ namespace reciprocity.Models.Home
 
         public static SuggestionViewModel Create(SuggestionModel suggestion)
         {
-            string name, value;
+            bool isTerminal;
+            string name, value, category;
             if (suggestion.Parenthetical != null)
             {
-                if (suggestion.ServingType == "v")
+                value = $"{suggestion.Name} ({suggestion.Parenthetical})";
+                if (suggestion.ServingType != Constants.QuantityUnitTypeCode)
                 {
                     name = $"{suggestion.Name} ({suggestion.Serving} {suggestion.UnitAbbreviation}, {suggestion.Parenthetical})";
                 }
                 else
                 {
-                    name = $"{suggestion.Name} ({suggestion.Parenthetical})";
+                    name = value;
                 }
-                value = $"{suggestion.Name} ({suggestion.Parenthetical})";
             }
             else if (suggestion.UnitAbbreviation != null)
             {
@@ -39,6 +40,19 @@ namespace reciprocity.Models.Home
             {
                 name = value = suggestion.Name;
             }
+            switch (suggestion.SuggestionTypeCode)
+            {
+                case Constants.MeasurementSuggestionTypeCode:
+                    isTerminal = true;
+                    category = "Weights & Measures";
+                    break;
+                case Constants.IngredientSuggestionTypeCode:
+                    category = "Ingredients";
+                    isTerminal = false;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(suggestion.SuggestionTypeCode));
+            }
             return new SuggestionViewModel
             {
                 Name = name,
@@ -46,8 +60,8 @@ namespace reciprocity.Models.Home
                 CaloriesPerServing = suggestion.CaloriesPerServing,
                 Serving = suggestion.Serving,
                 ServingUnit = $"{suggestion.ServingType},{suggestion.ServingCode}",
-                IsTerminal = suggestion.IsTerminal,
-                Category = suggestion.IsTerminal ? "Weights & Measures" : "Suggestions"
+                IsTerminal = isTerminal,
+                Category = category
             };
         }
     }
