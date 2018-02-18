@@ -9,13 +9,13 @@ namespace reciprocity.Models.Recipe
     public class EditIngredientModel : IValidatableObject
     {
         [Required]
-        [Range(0, 100)]
+        [Range(0, 255)]
         public int? IngredientNo { get; set; }
 
         public bool Checked { get; set; }
 
         [Required]
-        [MaxLength(100)]
+        [StringLength(255)]
         public string Name { get; set; }
 
         [Required]

@@ -1,7 +1,7 @@
 ﻿-- Drop objects in reverse order, since they depend on each other.
 -- A better database offers "DROP SCHEMA IF EXISTS [dbo] CASCADE" to do this.
 
-IF EXISTS (SELECT * FROM sys.fulltext_indexes fti WHERE fti.object_id = OBJECT_ID(N'reciprocity.CNF_FoodName'))
+IF EXISTS (SELECT * FROM sys.fulltext_indexes fti WHERE fti.[object_id] = OBJECT_ID(N'reciprocity.CNF_FoodName'))
 	DROP FULLTEXT INDEX ON reciprocity.CNF_FoodName;
 
 GO
@@ -110,7 +110,7 @@ CREATE TABLE reciprocity.Book (
 	BookId UNIQUEIDENTIFIER NOT NULL,
 
 	Token BINARY(40) NOT NULL,
-	[Name] NVARCHAR(100) NOT NULL,
+	[Name] NVARCHAR(255) NOT NULL,
 
 	CONSTRAINT Book_PK
 		PRIMARY KEY (BookId),
@@ -120,7 +120,7 @@ CREATE TABLE reciprocity.BookRecipe (
 	BookId UNIQUEIDENTIFIER NOT NULL,
 	RecipeId UNIQUEIDENTIFIER NOT NULL,
 
-	[Name] NVARCHAR(100) NOT NULL,
+	[Name] NVARCHAR(255) NOT NULL,
 	[Description] NVARCHAR(MAX) NULL,
 	Servings INT NOT NULL,
 	AddedAt DATETIME NOT NULL,
@@ -139,7 +139,7 @@ CREATE TABLE reciprocity.BookRecipeIngredient (
 	RecipeId UNIQUEIDENTIFIER NOT NULL,
 	IngredientNo INT NOT NULL,
 
-	[Name] NVARCHAR(100) NOT NULL,
+	[Name] NVARCHAR(255) NOT NULL,
 	Quantity DECIMAL(7,2) NOT NULL,
 	QuantityType CHAR(1) NOT NULL,
 	QuantityUnit VARCHAR(3) NOT NULL,
@@ -166,7 +166,7 @@ CREATE TABLE reciprocity.BookRecipeIngredient (
 
 CREATE TYPE reciprocity.SaveBookRecipeIngredient AS TABLE (
 	IngredientNo INT NOT NULL,
-	[Name] NVARCHAR(100) NOT NULL,
+	[Name] NVARCHAR(255) NOT NULL,
 	Quantity DECIMAL(7,2) NOT NULL,
 	QuantityType CHAR(1) NOT NULL,
 	QuantityUnit VARCHAR(3) NOT NULL,

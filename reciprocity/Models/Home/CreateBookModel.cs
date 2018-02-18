@@ -8,7 +8,7 @@ namespace reciprocity.Models.Home
 {
     public class CreateBookModel
     {
-        [Required, StringLength(100)]
+        [Required, StringLength(255)]
         public string Name { get; set; }
     }
 }

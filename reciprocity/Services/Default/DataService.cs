@@ -306,7 +306,7 @@ namespace reciprocity.Services.Default
         private static readonly SqlMetaData[] BookRecipeIngredientMetaData =
         {
             new SqlMetaData("IngredientNo", SqlDbType.Int),
-            new SqlMetaData("Name", SqlDbType.NVarChar, 100),
+            new SqlMetaData("Name", SqlDbType.NVarChar, 255),
             new SqlMetaData("Quantity", SqlDbType.Decimal, 7, 2),
             new SqlMetaData("QuantityType", SqlDbType.Char, 1),
             new SqlMetaData("QuantityUnit", SqlDbType.VarChar, 3),

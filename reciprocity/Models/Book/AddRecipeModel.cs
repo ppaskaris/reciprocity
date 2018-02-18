@@ -9,7 +9,7 @@ namespace reciprocity.Models.Book
     public class AddRecipeModel
     {
         [Required]
-        [StringLength(100)]
+        [StringLength(255)]
         public string Name { get; set; }
 
         public string Description { get; set; }
