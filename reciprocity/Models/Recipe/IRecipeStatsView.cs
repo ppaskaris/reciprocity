@@ -9,6 +9,7 @@ namespace reciprocity.Models.Recipe
     {
         int Servings { get; }
         int CaloriesPerServing { get; }
+        decimal ProteinPerServing { get; }
         TimeSpan ReadyIn { get; }
         DateTime AddedAt { get; }
         DateTime LastModifiedAt { get; }

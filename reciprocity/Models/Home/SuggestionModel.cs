@@ -13,6 +13,7 @@ namespace reciprocity.Models.Home
         public string ServingCode { get; set; }
         public string UnitAbbreviation { get; set; }
         public decimal CaloriesPerServing { get; set; }
+        public decimal ProteinPerServing { get; set; }
         public string Parenthetical { get; set; }
         public string SuggestionTypeCode { get; set; }
     }

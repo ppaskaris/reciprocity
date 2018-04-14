@@ -34,15 +34,16 @@ namespace reciprocity.Controllers
                 return BadRequest();
             }
 
-            var (ingredients, caloriesPerServing) = await _dataService
-                .GetRecipeViewComponentsAsync(recipe.BookId, recipe.RecipeId);
+            var (ingredients, caloriesPerServing, proteinPerServing) =
+                await _dataService.GetRecipeViewComponentsAsync(recipe.BookId, recipe.RecipeId);
 
             return View(new RecipeViewModel
             {
                 Book = book,
                 Recipe = recipe,
                 Ingredients = ingredients,
-                CaloriesPerServing = caloriesPerServing
+                CaloriesPerServing = caloriesPerServing,
+                ProteinPerServing = proteinPerServing
             });
         }
 
@@ -156,7 +157,8 @@ namespace reciprocity.Controllers
                     QuantityUnit = $"{ingredient.QuantityType},{ingredient.QuantityUnit}",
                     Serving = ingredient.Serving,
                     ServingUnit = $"{ingredient.ServingType},{ingredient.ServingUnit}",
-                    CaloriesPerServing = ingredient.CaloriesPerServing
+                    CaloriesPerServing = ingredient.CaloriesPerServing,
+                    ProteinPerServing = ingredient.ProteinPerServing
                 })
                 .ToList();
 
@@ -215,7 +217,8 @@ namespace reciprocity.Controllers
                     QuantityUnit = $"{ingredient.QuantityType},{ingredient.QuantityUnit}",
                     Serving = ingredient.Serving,
                     ServingUnit = $"{ingredient.ServingType},{ingredient.ServingUnit}",
-                    CaloriesPerServing = ingredient.CaloriesPerServing
+                    CaloriesPerServing = ingredient.CaloriesPerServing,
+                    ProteinPerServing = ingredient.ProteinPerServing
                 })
                 .ToList();
 
@@ -256,7 +259,8 @@ namespace reciprocity.Controllers
                         QuantityUnit = ingredient.QuantityUnit,
                         Serving = ingredient.Serving,
                         ServingUnit = ingredient.ServingUnit,
-                        CaloriesPerServing = ingredient.CaloriesPerServing
+                        CaloriesPerServing = ingredient.CaloriesPerServing,
+                        ProteinPerServing = ingredient.ProteinPerServing
                     })
                     .ToList();
 

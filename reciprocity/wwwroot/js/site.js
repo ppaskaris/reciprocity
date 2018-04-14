@@ -76,6 +76,7 @@
         var $element = this.$element;
         $('#' + $element.attr('data-quantity-unit')).val(suggestion.servingUnit);
         $('#' + $element.attr('data-calories-per-serving')).val(suggestion.caloriesPerServing);
+        $('#' + $element.attr('data-protein-per-serving')).val(suggestion.proteinPerServing);
         $('#' + $element.attr('data-serving')).val(suggestion.serving);
         $('#' + $element.attr('data-serving-unit')).val(suggestion.servingUnit);
         if (!suggestion.isTerminal) {
@@ -106,7 +107,7 @@
 
     function ConfigureScript() {
         var $config = $('meta[name="application-name"]');
-        InvokeAutoSuggest.href = $config.attr('data-auto-suggest-href')
+        InvokeAutoSuggest.href = $config.attr('data-auto-suggest-href');
     }
 
     function HandleDocumentReady() {

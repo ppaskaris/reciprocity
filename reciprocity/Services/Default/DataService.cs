@@ -100,16 +100,16 @@ namespace reciprocity.Services.Default
             }
         }
 
-        async Task<RecipeKeyModel> IDataService.CreateRecipeAsync(Guid bookId, AddRecipeModel fragment)
+        async Task<RecipeKeyModel> IDataService.CreateRecipeAsync(Guid bookId, AddRecipeModel model)
         {
             var now = DateTime.UtcNow;
             var recipe = new RecipeModel
             {
                 BookId = bookId,
                 RecipeId = Guid.NewGuid(),
-                Name = fragment.Name,
-                Description = fragment.Description,
-                Servings = fragment.Servings,
+                Name = model.Name,
+                Description = model.Description,
+                Servings = model.Servings,
                 AddedAt = now,
                 LastModifiedAt = now
             };
@@ -160,6 +160,7 @@ namespace reciprocity.Services.Default
                     BookRecipe.[Description],
                     BookRecipe.Servings,
                     BookRecipeStatistics.CaloriesPerServing,
+                    BookRecipeStatistics.ProteinPerServing,
                     BookRecipe.AddedAt,
                     BookRecipe.LastModifiedAt
                 FROM BookRecipe
@@ -182,7 +183,7 @@ namespace reciprocity.Services.Default
             }
         }
 
-        async Task IDataService.UpdateRecipeAsync(Guid bookId, Guid recipeId, EditRecipeModel fragment)
+        async Task IDataService.UpdateRecipeAsync(Guid bookId, Guid recipeId, EditRecipeModel model)
         {
             using (var connection = GetConnection())
             {
@@ -200,9 +201,9 @@ namespace reciprocity.Services.Default
                     {
                         bookId,
                         recipeId,
-                        name = fragment.Name,
-                        description = fragment.Description,
-                        servings = fragment.Servings,
+                        name = model.Name,
+                        description = model.Description,
+                        servings = model.Servings,
                         now = DateTime.UtcNow,
                     });
             }
@@ -292,7 +293,8 @@ namespace reciprocity.Services.Default
                         Serving,
                         ServingType,
                         ServingUnit,
-                        CaloriesPerServing
+                        CaloriesPerServing,
+                        ProteinPerServing
                     FROM BookRecipeIngredient
                     WHERE BookId = @bookId AND RecipeId = @recipeId
                     ORDER BY IngredientNo;
@@ -314,6 +316,7 @@ namespace reciprocity.Services.Default
             new SqlMetaData("ServingType", SqlDbType.Char, 1),
             new SqlMetaData("ServingUnit", SqlDbType.VarChar, 3),
             new SqlMetaData("CaloriesPerServing", SqlDbType.Decimal, 7, 2),
+            new SqlMetaData("ProteinPerServing", SqlDbType.Decimal, 7, 2),
         };
 
         private class UnitKey
@@ -350,6 +353,7 @@ namespace reciprocity.Services.Default
             dataRecord.SetString(6, servingUnit.UnitTypeCode);
             dataRecord.SetString(7, servingUnit.UnitCode);
             dataRecord.SetDecimal(8, ingredient.CaloriesPerServing.Value);
+            dataRecord.SetDecimal(9, ingredient.ProteinPerServing.Value);
             return dataRecord;
         }
 
@@ -384,7 +388,8 @@ namespace reciprocity.Services.Default
                                 Serving = source.Serving,
                                 ServingType = source.ServingType,
                                 ServingUnit = source.ServingUnit,
-                                CaloriesPerServing = source.CaloriesPerServing
+                                CaloriesPerServing = source.CaloriesPerServing,
+                                ProteinPerServing = source.ProteinPerServing
                         WHEN NOT MATCHED BY TARGET THEN
                             INSERT (
                                 BookId,
@@ -397,7 +402,8 @@ namespace reciprocity.Services.Default
                                 Serving,
                                 ServingType,
                                 ServingUnit,
-                                CaloriesPerServing
+                                CaloriesPerServing,
+                                ProteinPerServing
                             ) VALUES (
                                 @bookId,
                                 @recipeId,
@@ -409,7 +415,8 @@ namespace reciprocity.Services.Default
                                 source.Serving,
                                 source.ServingType,
                                 source.ServingUnit,
-                                source.CaloriesPerServing
+                                source.CaloriesPerServing,
+                                source.ProteinPerServing
                             )
                         WHEN NOT MATCHED BY SOURCE
                             AND target.BookId = @bookId
@@ -449,7 +456,7 @@ namespace reciprocity.Services.Default
             }
         }
 
-        async Task<(IEnumerable<IngredientViewModel>, int)> IDataService.GetRecipeViewComponentsAsync(Guid bookId, Guid recipeId)
+        async Task<(IEnumerable<IngredientViewModel>, int, decimal)> IDataService.GetRecipeViewComponentsAsync(Guid bookId, Guid recipeId)
         {
             const string queryText =
                 @"
@@ -465,7 +472,9 @@ namespace reciprocity.Services.Default
                 WHERE BookId = @bookId AND RecipeId = @recipeId
                 ORDER BY IngredientNo;
 
-                SELECT CaloriesPerServing
+                SELECT
+                    CaloriesPerServing,
+                    ProteinPerServing
                 FROM BookRecipeStatistics
                 WHERE BookId = @bookId AND RecipeId = @recipeId;
                 ";
@@ -478,8 +487,9 @@ namespace reciprocity.Services.Default
             using (var query = await connection.QueryMultipleAsync(queryText, queryParams))
             {
                 var ingredients = await query.ReadAsync<IngredientViewModel>();
-                var caloriesPerServing = await query.ReadFirstOrDefaultAsync<int>();
-                return (ingredients, caloriesPerServing);
+                var (caloriesPerServing, proteinPerServing) = await query
+                    .ReadFirstOrDefaultAsync<(int, decimal)>();
+                return (ingredients, caloriesPerServing, proteinPerServing);
             }
         }
 
@@ -545,9 +555,9 @@ namespace reciprocity.Services.Default
 
         #endregion
 
-        async Task<IEnumerable<SuggestionViewModel>> IDataService.GetSuggestionsAsync(string rawQuery)
+        async Task<IEnumerable<SuggestionViewModel>> IDataService.GetSuggestionsAsync(string query)
         {
-            var searchQuery = SanitizeSearchQuery(rawQuery);
+            var searchQuery = SanitizeSearchQuery(query);
             if (searchQuery.Length <= 0)
             {
                 return Enumerable.Empty<SuggestionViewModel>();
@@ -564,7 +574,8 @@ namespace reciprocity.Services.Default
                     100.00 AS Serving,
                     Unit.UnitTypeCode AS ServingType,
                     Unit.UnitCode AS ServingCode,
-                    CAST(CNF_NutrientAmount.NutrientValue AS DECIMAL(7, 2)) AS CaloriesPerServing,
+                    CAST(CNF_NA_C.NutrientValue AS DECIMAL(7, 2)) AS CaloriesPerServing,
+                    CAST(CNF_NA_P.NutrientValue AS DECIMAL(7, 2)) AS ProteinPerServing,
                     NULL AS Parenthetical,
                     Unit.Abbreviation AS UnitAbbreviation,
                     'm' as SuggestionTypeCode,
@@ -572,25 +583,34 @@ namespace reciprocity.Services.Default
                     Unit.ConversionRatio AS SortOrder2,
                     Unit.[Name] AS SortOrder3
                 FROM reciprocity.CNF_FoodName
-                INNER JOIN reciprocity.CNF_NutrientAmount
-                    ON CNF_NutrientAmount.FoodId = CNF_FoodName.FoodId
-                INNER JOIN reciprocity.CNF_NutrientName
-                    ON CNF_NutrientAmount.NutrientId = CNF_NutrientName.NutrientId
+                INNER JOIN reciprocity.CNF_NutrientAmount AS CNF_NA_C
+                    ON CNF_NA_C.FoodId = CNF_FoodName.FoodId
+                INNER JOIN reciprocity.CNF_NutrientName AS CNF_NN_C
+                    ON CNF_NA_C.NutrientId = CNF_NN_C.NutrientId
+                    AND CNF_NN_C.NutrientSymbol = 'KCAL'
+                INNER JOIN reciprocity.CNF_NutrientAmount AS CNF_NA_P
+                    ON CNF_NA_P.FoodId = CNF_FoodName.FoodId
+                INNER JOIN reciprocity.CNF_NutrientName AS CNF_NN_P
+                    ON CNF_NA_P.NutrientId = CNF_NN_P.NutrientId
+                    AND CNF_NN_P.NutrientSymbol = 'PROT'
                 INNER JOIN reciprocity.Unit
                     ON Unit.UnitTypeCode = 'm'
                     AND Unit.UnitCode = 'g'
                 INNER JOIN reciprocity.UnitType
                     ON UnitType.UnitTypeCode = Unit.UnitTypeCode
                 WHERE CNF_FoodName.FoodDescription = @searchQuery
-                    AND CNF_NutrientName.NutrientSymbol = 'KCAL'
-                UNION
+
+                    UNION
+
                 SELECT
                     CNF_FoodName.FoodDescription AS [Name],
                     CNF_Unit.Serving AS Serving,
                     CNF_Unit.ServingType AS ServingType,
                     CNF_Unit.ServingCode AS ServingCode,
-                    CAST((CNF_NutrientAmount.NutrientValue * CNF_ConversionFactor.ConversionFactorValue)
+                    CAST((CNF_NA_C.NutrientValue * CNF_ConversionFactor.ConversionFactorValue)
                             AS DECIMAL(7, 2)) AS CaloriesPerServing,
+                    CAST((CNF_NA_P.NutrientValue * CNF_ConversionFactor.ConversionFactorValue)
+                            AS DECIMAL(7, 2)) AS ProteinPerServing,
                     CNF_Unit.Parenthetical,
                     Unit.Abbreviation AS UnitAbbreviation,
                     'm' as SuggestionCode,
@@ -598,10 +618,16 @@ namespace reciprocity.Services.Default
                     Unit.ConversionRatio AS SortOrder2,
                     Unit.[Name] AS SortOrder3
                 FROM reciprocity.CNF_FoodName
-                INNER JOIN reciprocity.CNF_NutrientAmount
-                    ON CNF_NutrientAmount.FoodId = CNF_FoodName.FoodId
-                INNER JOIN reciprocity.CNF_NutrientName
-                    ON CNF_NutrientAmount.NutrientId = CNF_NutrientName.NutrientId
+                INNER JOIN reciprocity.CNF_NutrientAmount AS CNF_NA_C
+                    ON CNF_NA_C.FoodId = CNF_FoodName.FoodId
+                INNER JOIN reciprocity.CNF_NutrientName AS CNF_NN_C
+                    ON CNF_NA_C.NutrientId = CNF_NN_C.NutrientId
+                    AND CNF_NN_C.NutrientSymbol = 'KCAL'
+                INNER JOIN reciprocity.CNF_NutrientAmount AS CNF_NA_P
+                    ON CNF_NA_P.FoodId = CNF_FoodName.FoodId
+                INNER JOIN reciprocity.CNF_NutrientName AS CNF_NN_P
+                    ON CNF_NA_P.NutrientId = CNF_NN_P.NutrientId
+                    AND CNF_NN_P.NutrientSymbol = 'PROT'
                 INNER JOIN reciprocity.CNF_ConversionFactor
                     ON CNF_ConversionFactor.FoodId = CNF_FoodName.FoodId
                 INNER JOIN reciprocity.CNF_Unit
@@ -612,7 +638,6 @@ namespace reciprocity.Services.Default
                 INNER JOIN reciprocity.UnitType
                     ON UnitType.UnitTypeCode = Unit.UnitTypeCode
                 WHERE CNF_FoodName.FoodDescription = @searchQuery
-                    AND CNF_NutrientName.NutrientSymbol = 'KCAL'
                 ORDER BY SortOrder1, SortOrder2, SortOrder3;
 
                 SELECT
@@ -620,17 +645,23 @@ namespace reciprocity.Services.Default
                     100.00 AS Serving,
                     'm' AS ServingType,
                     'g' AS ServingCode,
-                    CAST(CNF_NutrientAmount.NutrientValue AS DECIMAL(7, 2)) AS CaloriesPerServing,
+                    CAST(CNF_NA_C.NutrientValue AS DECIMAL(7, 2)) AS CaloriesPerServing,
+                    CAST(CNF_NA_P.NutrientValue AS DECIMAL(7, 2)) AS ProteinPerServing,
                     'i' as SuggestionTypeCode
                 FROM reciprocity.CNF_FoodName
                 INNER JOIN CONTAINSTABLE(reciprocity.CNF_FoodName, FoodDescription, @searchTerms, 25) AS SearchResult
                     ON SearchResult.[KEY] = CNF_FoodName.FoodId
-                INNER JOIN reciprocity.CNF_NutrientAmount
-                    ON CNF_NutrientAmount.FoodId = CNF_FoodName.FoodId
-                INNER JOIN reciprocity.CNF_NutrientName
-                    ON CNF_NutrientAmount.NutrientId = CNF_NutrientName.NutrientId
+                INNER JOIN reciprocity.CNF_NutrientAmount AS CNF_NA_C
+                    ON CNF_NA_C.FoodId = CNF_FoodName.FoodId
+                INNER JOIN reciprocity.CNF_NutrientName AS CNF_NN_C
+                    ON CNF_NA_C.NutrientId = CNF_NN_C.NutrientId
+                    AND CNF_NN_C.NutrientSymbol = 'KCAL'
+                INNER JOIN reciprocity.CNF_NutrientAmount AS CNF_NA_P
+                    ON CNF_NA_P.FoodId = CNF_FoodName.FoodId
+                INNER JOIN reciprocity.CNF_NutrientName AS CNF_NN_P
+                    ON CNF_NA_P.NutrientId = CNF_NN_P.NutrientId
+                    AND CNF_NN_P.NutrientSymbol = 'PROT'
                 WHERE CNF_FoodName.FoodDescription <> @searchQuery
-                    AND CNF_NutrientName.NutrientSymbol = 'KCAL'
                 ORDER BY SearchResult.[RANK] DESC, CNF_FoodName.FoodDescription;
                 ";
             var queryParams = new
@@ -639,10 +670,10 @@ namespace reciprocity.Services.Default
                 searchTerms
             };
             using (var connection = GetConnection())
-            using (var query = await connection.QueryMultipleAsync(queryText, queryParams))
+            using (var results = await connection.QueryMultipleAsync(queryText, queryParams))
             {
-                var measurements = query.Read<SuggestionModel>();
-                var ingredients = query.Read<SuggestionModel>();
+                var measurements = results.Read<SuggestionModel>();
+                var ingredients = results.Read<SuggestionModel>();
                 return measurements.Concat(ingredients)
                     .Select(SuggestionViewModel.Create);
             }

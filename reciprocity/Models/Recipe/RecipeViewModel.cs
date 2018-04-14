@@ -12,6 +12,7 @@ namespace reciprocity.Models.Recipe
         public RecipeModel Recipe { get; set; }
         public IEnumerable<IngredientViewModel> Ingredients { get; set; }
         public int CaloriesPerServing { get; set; }
+        public decimal ProteinPerServing { get; set; }
 
         int IRecipeStatsViewModel.Servings => Recipe.Servings;
         TimeSpan IRecipeStatsViewModel.ReadyIn => Recipe.ReadyIn;

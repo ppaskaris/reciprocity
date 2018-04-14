@@ -14,6 +14,7 @@ namespace reciprocity.Models.Book
 
         public int Servings { get; set; }
         public int CaloriesPerServing { get; set; }
+        public decimal ProteinPerServing { get; set; }
         public TimeSpan ReadyIn { get; set; }
         public DateTime AddedAt { get; set; }
         public DateTime LastModifiedAt { get; set; }

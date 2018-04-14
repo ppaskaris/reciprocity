@@ -29,17 +29,18 @@
         <thead>
             <tr>
                 @if (Model.ShowBulkActions)
-                {
-                    <th class="text-center">
-                        <span class="glyphicon glyphicon-th-list"
-                              title="Bulk Select" aria-hidden="true"></span>
-                        <span class="sr-only">bulk select</span>
-                    </th>
-                }
+    {
+            <th class="text-center">
+                <span class="glyphicon glyphicon-th-list"
+                      title="Bulk Select" aria-hidden="true"></span>
+                <span class="sr-only">bulk select</span>
+            </th>
+}
                 <th>@Html.DisplayNameFor(model => model.Ingredients.First().Name)</th>
                 <th style="text-align:right;">@Html.DisplayNameFor(model => model.Ingredients.First().Quantity)</th>
                 <th>@Html.DisplayNameFor(model => model.Ingredients.First().QuantityUnit)</th>
                 <th style="text-align:center;">@Html.DisplayNameFor(model => model.Ingredients.First().CaloriesPerServing)</th>
+                <th style="text-align:center;">@Html.DisplayNameFor(model => model.Ingredients.First().ProteinPerServing)</th>
                 <th style="text-align:right;">@Html.DisplayNameFor(model => model.Ingredients.First().Serving)</th>
                 <th>@Html.DisplayNameFor(model => model.Ingredients.First().ServingUnit)</th>
             </tr>
