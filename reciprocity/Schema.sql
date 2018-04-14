@@ -147,6 +147,7 @@ CREATE TABLE reciprocity.BookRecipeIngredient (
 	ServingType CHAR(1) NOT NULL,
 	ServingUnit VARCHAR(3) NOT NULL,
 	CaloriesPerServing DECIMAL(7,2) NOT NULL,
+	ProteinPerServing DECIMAL(7,2) NOT NULL,
 
 	CONSTRAINT BookRecipeIngredient_PK
 		PRIMARY KEY (BookId, RecipeId, IngredientNo),
@@ -173,7 +174,8 @@ CREATE TYPE reciprocity.SaveBookRecipeIngredient AS TABLE (
 	Serving DECIMAL(7,2) NOT NULL,
 	ServingType CHAR(1) NOT NULL,
 	ServingUnit VARCHAR(3) NOT NULL,
-	CaloriesPerServing DECIMAL(7,2) NOT NULL
+	CaloriesPerServing DECIMAL(7,2) NOT NULL,
+	ProteinPerServing DECIMAL(7,2) NOT NULL
 );
 
 GO
@@ -182,7 +184,8 @@ CREATE VIEW reciprocity.BookRecipeStatistics AS
 SELECT
 	BookId,
 	RecipeId,
-	CAST(CEILING(SUM(Quantity / Serving * CaloriesPerServing / Servings)) AS INT) AS CaloriesPerServing
+	CAST(ROUND(SUM(Quantity / Serving * CaloriesPerServing / Servings), 0) AS INT) AS CaloriesPerServing,
+	CAST(ROUND(SUM(Quantity / Serving * ProteinPerServing / Servings), 2) AS DECIMAL(7, 2)) AS ProteinPerServing
 FROM (
 	SELECT
 		BookRecipe.BookId,
@@ -190,7 +193,8 @@ FROM (
         BookRecipe.Servings,
 		BookRecipeIngredient.Quantity * QuantityUnit.ConversionRatio AS Quantity,
 		BookRecipeIngredient.Serving * ServingUnit.ConversionRatio AS Serving,
-		BookRecipeIngredient.CaloriesPerServing
+		BookRecipeIngredient.CaloriesPerServing,
+		BookRecipeIngredient.ProteinPerServing
 	FROM reciprocity.BookRecipe
 	INNER JOIN reciprocity.BookRecipeIngredient
         ON BookRecipeIngredient.BookId = BookRecipe.BookId
@@ -262,6 +266,8 @@ CREATE TABLE reciprocity.CNF_NutrientName (
 
 	CONSTRAINT CNF_NutrientName_PK
 		PRIMARY KEY (NutrientId),
+
+	INDEX CNF_NutrientName_NutrientSymbol (NutrientSymbol)
 );
 
 CREATE TABLE reciprocity.CNF_NutrientAmount (

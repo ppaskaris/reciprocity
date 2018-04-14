@@ -21,6 +21,7 @@
                class="form-control @className js-AutoSuggest" autocomplete="off"
                data-quantity-unit="@Html.IdFor(model => model.QuantityUnit)"
                data-calories-per-serving="@Html.IdFor(model => model.CaloriesPerServing)"
+               data-protein-per-serving="@Html.IdFor(model => model.ProteinPerServing)"
                data-serving="@Html.IdFor(model => model.Serving)"
                data-serving-unit="@Html.IdFor(model => model.ServingUnit)" />
         <span asp-validation-for="Name" class="text-danger"></span>
@@ -39,6 +40,11 @@
         <label asp-for="CaloriesPerServing" class="sr-only"></label>
         <input asp-for="CaloriesPerServing" class="form-control" style="text-align:center;" />
         <span asp-validation-for="CaloriesPerServing" class="text-danger"></span>
+    </td>
+    <td>
+        <label asp-for="ProteinPerServing" class="sr-only"></label>
+        <input asp-for="ProteinPerServing" class="form-control" style="text-align:center;" />
+        <span asp-validation-for="ProteinPerServing" class="text-danger"></span>
     </td>
     <td>
         <label asp-for="Serving" class="sr-only"></label>

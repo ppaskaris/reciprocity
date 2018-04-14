@@ -9,9 +9,13 @@
     </li>
     <li>
         <span class="glyphicon glyphicon-stats"
-              title="Calories per serving" aria-hidden="true"></span>
+              title="Nutritional contrent" aria-hidden="true"></span>
         <span class="text-hide">Calories per serving:</span>
         @Model.CaloriesPerServing
+        <span title="calories">Cal</span>, 
+        <span class="text-hide">Protein per serving:</span>
+        @Model.ProteinPerServing
+        <span title="grams">g</span>
     </li>
     <li>
         <span class="glyphicon glyphicon-time"

@@ -19,5 +19,6 @@ namespace reciprocity.Models.Recipe
         public string ServingType{ get; set; }
         public string ServingUnit { get; set; }
         public decimal CaloriesPerServing { get; set; }
+        public decimal ProteinPerServing { get; set; }
     }
 }

@@ -40,8 +40,14 @@ namespace reciprocity.Models.Recipe
 
         [Required]
         [Range(Constants.MeasurementMin, Constants.MeasurementMax)]
-        [Display(Name = "Calories per serving")]
+        [Display(Name = "Calories")]
         public decimal? CaloriesPerServing { get; set; }
+
+
+        [Required]
+        [Range(Constants.MeasurementMin, Constants.MeasurementMax)]
+        [Display(Name = "Protein")]
+        public decimal? ProteinPerServing { get; set; }
 
         IEnumerable<ValidationResult> IValidatableObject.Validate(ValidationContext validationContext)
         {

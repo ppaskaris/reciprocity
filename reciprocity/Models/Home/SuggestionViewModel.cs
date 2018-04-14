@@ -12,6 +12,7 @@ namespace reciprocity.Models.Home
         public decimal Serving { get; set; }
         public string ServingUnit { get; set; }
         public decimal CaloriesPerServing { get; set; }
+        public decimal ProteinPerServing { get; set; }
         public bool IsTerminal { get; set; }
         public string Category { get; set; }
 
@@ -58,6 +59,7 @@ namespace reciprocity.Models.Home
                 Name = name,
                 Value = value,
                 CaloriesPerServing = suggestion.CaloriesPerServing,
+                ProteinPerServing = suggestion.ProteinPerServing,
                 Serving = suggestion.Serving,
                 ServingUnit = $"{suggestion.ServingType},{suggestion.ServingCode}",
                 IsTerminal = isTerminal,
